@@ -1,51 +1,51 @@
 rshell TODO Checklist
 
 1. Project Setup
-[ ] Create Rust project with cargo new rshell
-[ ] Configure rustfmt
-[ ] Configure clippy
-[ ] Create module structure
-[ ] Create initial README
+- [ ] Create Rust project with cargo new rshell
+- [ ] Configure rustfmt
+- [ ] Configure clippy
+- [ ] Create module structure
+- [ ] Create initial README
 
 2. REPL Loop
-[ ] Display shell prompt
-[ ] Read user input from stdin
-[ ] Handle empty input
-[ ] Implement infinite REPL loop
-[ ] Gracefully terminate shell
+- [ ] Display shell prompt
+- [ ] Read user input from stdin
+- [ ] Handle empty input
+- [ ] Implement infinite REPL loop
+- [ ] Gracefully terminate shell
 
 3. Basic Command Execution
-[ ] Parse command and arguments
-[ ] Spawn child processes
-[ ] Execute external binaries
-[ ] Wait for child process completion
-[ ] Display execution errors
-[ ] Handle invalid commands
+- [ ] Parse command and arguments
+- [ ] Spawn child processes
+- [ ] Execute external binaries
+- [ ] Wait for child process completion
+- [ ] Display execution errors
+- [ ] Handle invalid commands
 
 4. Built-in Commands
-[ ] cd
+- [ ] cd
     - Implement cd
     - Handle invalid directories
     - Support cd ..
     - Support cd ~
-[ ] pwd
-[ ] echo
-[ ] clear
-[ ] exit
+- [ ] pwd
+- [ ] echo
+- [ ] clear
+- [ ] exit
 
 5. Lexer
-[ ] Token Infrastructure
+- [ ] Token Infrastructure
     - Create token enum
     - Implement lexer state machine
     - Tokenize plain words
-[ ] Quotes
+- [ ] Quotes
     - Support double quotes
     - Support single quotes
     - Handle unterminated quotes
-[ ] Escaping
+- [ ] Escaping
     - Support escaped characters
     - Support escaped spaces
-[ ] Operators
+- [ ] Operators
     - Tokenize |
     - Tokenize >
     - Tokenize >>
@@ -53,16 +53,16 @@ rshell TODO Checklist
     - Tokenize &&
     - Tokenize ||
     - Tokenize &
-[ ] Testing
+- [ ] Testing
 
 6. Parser & AST
-[ ] AST
+- [ ] AST
     - Design AST node types
     - Implement command AST nodes
     - Implement pipe AST nodes
     - Implement redirect AST nodes
     - Implement logical operator AST nodes
-[ ] Parser
+- [ ] Parser
     - Parse simple commands
     - Parse command arguments
     - Parse pipes
@@ -71,137 +71,137 @@ rshell TODO Checklist
     - Parse background jobs
     - Handle parser errors
     - Detect invalid syntax
-[ ] Testing
+- [ ] Testing
 
 7. Pipes
-[ ] Create Unix pipes
-[ ] Redirect stdout to pipe
-[ ] Redirect stdin from pipe
-[ ] Execute piped commands
-[ ] Support multi-stage pipes
-[ ] Close unused file descriptors
-[ ] Handle pipe failures
-[ ] Test pipe behavior
+- [ ] Create Unix pipes
+- [ ] Redirect stdout to pipe
+- [ ] Redirect stdin from pipe
+- [ ] Execute piped commands
+- [ ] Support multi-stage pipes
+- [ ] Close unused file descriptors
+- [ ] Handle pipe failures
+- [ ] Test pipe behavior
 
 8. Redirection
-[ ] Output Redirection
+- [ ] Output Redirection
     - Implement >
     - Create output files
     - Truncate existing files
-[ ] Append Redirection
+- [ ] Append Redirection
     - Implement >>
     - Append to files
-[ ] Input Redirection
+- [ ] Input Redirection
     - Implement <
     - Read input from files
-[ ] File Descriptor Management
+- [ ] File Descriptor Management
     - Duplicate file descriptors
     - Restore original descriptors
     - Handle redirection errors
-[ ] Testing
+- [ ] Testing
     - Test stdout redirection
     - Test stdin redirection
     - Test append behavior
 
 9. Environment Variables
-[ ] Variables
+- [ ] Variables
     - Read environment variables
     - Expand $VAR, $HOME, $PATH, etc.
-[ ] Export
+- [ ] Export
     - Implement export
     - Store shell variables
     - Inherit env vars in child processes
-[ ] Edge Cases
+- [ ] Edge Cases
     - Handle undefined variables
     - Handle variables in quotes
-[ ] Testing
+- [ ] Testing
 
 10. Command Chaining
-[ ] Logical Operators
+- [ ] Logical Operators
     - Implement &&
     - Implement ||
-[ ] Exit Status Logic
+- [ ] Exit Status Logic
     - Track process exit codes
-[ ] Testing
+- [ ] Testing
 
 11. Background Jobs
-[ ] Background Execution
+- [ ] Background Execution
     - Detect &
     - Run jobs asynchronously
     - Avoid blocking shell
-[ ] Job Tracking
+- [ ] Job Tracking
     - Create job table
     - Store job IDs
     - Track process states
-[ ] Built-ins
+- [ ] Built-ins
     - Implement jobs
     - Implement fg
     - Implement bg
-[ ] Process Management
+- [ ] Process Management
     - Reap background processes
     - Prevent zombie processes
-[ ] Testing
+- [ ] Testing
 
 12. Signal Handling
-[ ] SIGINT
+- [ ] SIGINT
     - Handle Ctrl+C
     - Prevent shell termination on SIGINT
     - Forward SIGINT to foreground process
-[ ] SIGTSTP
+- [ ] SIGTSTP
     - Handle Ctrl+Z
     - Suspend foreground jobs
-[ ] Process Groups
+- [ ] Process Groups
     - Create process groups
     - Transfer terminal control
     - Restore terminal ownership
-[ ] Handle Ctrl+D (EOF)
-[ ] Testing
+- [ ] Handle Ctrl+D (EOF)
+- [ ] Testing
 
 13. Command History
-[ ] History Storage
+- [ ] History Storage
     - Store executed commands
     - Persist history to disk
     - Load history on startup
-[ ] Navigation
+- [ ] Navigation
     - Support up-arrow navigation
     - Support down-arrow navigation
-[ ] Built-ins
+- [ ] Built-ins
     - Implement history
-[ ] Testing
+- [ ] Testing
 
 14. Tab Completion
-[ ] File Completion
+- [ ] File Completion
     - Complete filenames
     - Complete directories
-[ ] Command Completion
+- [ ] Command Completion
     - Complete executable names
     - Complete built-in commands
-[ ] UX Improvements
+- [ ] UX Improvements
     - Display multiple suggestions
     - Handle partial matches
-[ ] Testing
+- [ ] Testing
 
 15. Configuration System
-[ ] Config Loading
+- [ ] Config Loading
     - Load ~/.rshellrc
     - Parse config commands
     - Execute startup commands
-[ ] Aliases
+- [ ] Aliases
     - Implement aliases
     - Expand aliases during parsing
-[ ] Environment
+- [ ] Environment
     - Load exported variables from config
-[ ] Testing
+- [ ] Testing
 
 16. Stretch Goals
-[ ] Shell Features
+- [ ] Shell Features
     - Subshells
     - Command substitution
     - Shell scripting support
     - Functions
     - Conditional statements
     - Loops
-[ ] UX Improvements
+- [ ] UX Improvements
     - Syntax highlighting
     - Autosuggestions
     - Colored prompt
