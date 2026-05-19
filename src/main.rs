@@ -1,3 +1,7 @@
+mod rshell;
+
+pub use crate::rshell::test;
+
 fn main() {
-    println!("Hello, world!");
+    test();
 }

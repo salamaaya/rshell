@@ -1,20 +1,20 @@
 rshell TODO Checklist
 
-# 1. Project Setup
-- [ ] Create Rust project with cargo new rshell
-- [ ] Configure rustfmt
-- [ ] Configure clippy
-- [ ] Create module structure
-- [ ] Create initial README
+## 1. Project Setup
+- [x] Create Rust project with cargo new rshell
+- [x] Configure rustfmt
+- [x] Configure clippy
+- [x] Create module structure: will update as I progress
+- [x] Create initial README: will also update as I progress
 
-# 2. REPL Loop
+## 2. REPL Loop
 - [ ] Display shell prompt
 - [ ] Read user input from stdin
 - [ ] Handle empty input
 - [ ] Implement infinite REPL loop
 - [ ] Gracefully terminate shell
 
-# 3. Basic Command Execution
+## 3. Basic Command Execution
 - [ ] Parse command and arguments
 - [ ] Spawn child processes
 - [ ] Execute external binaries
@@ -22,7 +22,7 @@ rshell TODO Checklist
 - [ ] Display execution errors
 - [ ] Handle invalid commands
 
-# 4. Built-in Commands
+## 4. Built-in Commands
 - [ ] cd
     - Implement cd
     - Handle invalid directories
@@ -33,7 +33,7 @@ rshell TODO Checklist
 - [ ] clear
 - [ ] exit
 
-# 5. Lexer
+## 5. Lexer
 - [ ] Token Infrastructure
     - Create token enum
     - Implement lexer state machine
@@ -55,7 +55,7 @@ rshell TODO Checklist
     - Tokenize &
 - [ ] Testing
 
-# 6. Parser & AST
+## 6. Parser & AST
 - [ ] AST
     - Design AST node types
     - Implement command AST nodes
@@ -73,7 +73,7 @@ rshell TODO Checklist
     - Detect invalid syntax
 - [ ] Testing
 
-# 7. Pipes
+## 7. Pipes
 - [ ] Create Unix pipes
 - [ ] Redirect stdout to pipe
 - [ ] Redirect stdin from pipe
@@ -83,7 +83,7 @@ rshell TODO Checklist
 - [ ] Handle pipe failures
 - [ ] Test pipe behavior
 
-# 8. Redirection
+## 8. Redirection
 - [ ] Output Redirection
     - Implement >
     - Create output files
@@ -103,7 +103,7 @@ rshell TODO Checklist
     - Test stdin redirection
     - Test append behavior
 
-# 9. Environment Variables
+## 9. Environment Variables
 - [ ] Variables
     - Read environment variables
     - Expand $VAR, $HOME, $PATH, etc.
@@ -116,7 +116,7 @@ rshell TODO Checklist
     - Handle variables in quotes
 - [ ] Testing
 
-# 10. Command Chaining
+## 10. Command Chaining
 - [ ] Logical Operators
     - Implement &&
     - Implement ||
@@ -124,7 +124,7 @@ rshell TODO Checklist
     - Track process exit codes
 - [ ] Testing
 
-# 11. Background Jobs
+## 11. Background Jobs
 - [ ] Background Execution
     - Detect &
     - Run jobs asynchronously
@@ -142,7 +142,7 @@ rshell TODO Checklist
     - Prevent zombie processes
 - [ ] Testing
 
-# 12. Signal Handling
+## 12. Signal Handling
 - [ ] SIGINT
     - Handle Ctrl+C
     - Prevent shell termination on SIGINT
@@ -157,7 +157,7 @@ rshell TODO Checklist
 - [ ] Handle Ctrl+D (EOF)
 - [ ] Testing
 
-# 13. Command History
+## 13. Command History
 - [ ] History Storage
     - Store executed commands
     - Persist history to disk
@@ -169,7 +169,7 @@ rshell TODO Checklist
     - Implement history
 - [ ] Testing
 
-# 14. Tab Completion
+## 14. Tab Completion
 - [ ] File Completion
     - Complete filenames
     - Complete directories
@@ -181,7 +181,7 @@ rshell TODO Checklist
     - Handle partial matches
 - [ ] Testing
 
-# 15. Configuration System
+## 15. Configuration System
 - [ ] Config Loading
     - Load ~/.rshellrc
     - Parse config commands
@@ -193,7 +193,7 @@ rshell TODO Checklist
     - Load exported variables from config
 - [ ] Testing
 
-# 16. Stretch Goals
+## 16. Stretch Goals
 - [ ] Shell Features
     - Subshells
     - Command substitution
