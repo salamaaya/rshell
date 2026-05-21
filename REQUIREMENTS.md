@@ -4,15 +4,15 @@ rshell TODO Checklist
 - [x] Create Rust project with cargo new rshell
 - [x] Configure rustfmt
 - [x] Configure clippy
-- [x] Create module structure: will update as I progress
+- [ ] Create module structure: will update as I progress
 - [x] Create initial README: will also update as I progress
 
 ## 2. REPL Loop
-- [ ] Display shell prompt
-- [ ] Read user input from stdin
-- [ ] Handle empty input
-- [ ] Implement infinite REPL loop
-- [ ] Gracefully terminate shell
+- [x] Display shell prompt
+- [x] Read user input from stdin
+- [x] Handle empty input
+- [x] Implement infinite REPL loop
+- [x] Gracefully terminate shell
 
 ## 3. Basic Command Execution
 - [ ] Parse command and arguments
