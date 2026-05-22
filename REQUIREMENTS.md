@@ -15,12 +15,12 @@ rshell TODO Checklist
 - [x] Gracefully terminate shell
 
 ## 3. Basic Command Execution
-- [ ] Parse command and arguments
-- [ ] Spawn child processes
-- [ ] Execute external binaries
-- [ ] Wait for child process completion
-- [ ] Display execution errors
-- [ ] Handle invalid commands
+- [x] Parse command and arguments
+- [x] Spawn child processes
+- [x] Execute external binaries
+- [x] Wait for child process completion
+- [x] Display execution errors
+- [x] Handle invalid commands
 
 ## 4. Built-in Commands
 - [ ] cd
