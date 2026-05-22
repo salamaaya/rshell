@@ -1,5 +1,5 @@
 mod process;
-pub use crate::process::Process;
+use crate::process::Process;
 use crate::process::run_cmd;
 
 use std::io;
