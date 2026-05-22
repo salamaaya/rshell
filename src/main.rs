@@ -1,4 +1,6 @@
+mod builtins;
 mod process;
+
 use crate::process::Process;
 use crate::process::run_cmd;
 
@@ -28,8 +30,8 @@ fn main() {
             args,
         };
 
-        let exit = run_cmd(proc);
-        if exit == 1 {
+        let ret = run_cmd(proc);
+        if ret == 1 {
             break;
         }
     }
