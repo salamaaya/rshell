@@ -4,7 +4,7 @@ rshell TODO Checklist
 - [x] Create Rust project with cargo new rshell
 - [x] Configure rustfmt
 - [x] Configure clippy
-- [ ] Create module structure: will update as I progress
+- [x] Create module structure: will update as I progress
 - [x] Create initial README: will also update as I progress
 
 ## 2. REPL Loop
