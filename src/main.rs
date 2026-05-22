@@ -25,7 +25,7 @@ fn main() {
 
         let proc = Process {
             cmd: input[0].to_string(),
-            args: args,
+            args,
         };
 
         let exit = run_cmd(proc);

@@ -26,5 +26,5 @@ pub fn run_cmd(proc: Process) -> i32 {
         }
     }
 
-    return 0;
+    0
 }
