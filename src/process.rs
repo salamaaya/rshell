@@ -13,13 +13,13 @@ pub struct Process {
  *   1: exit
  *   0: continue
  */
-pub fn run_cmd(proc: Process) -> i32 {
-    if is_builtin(&proc.cmd.as_str()) {
+pub fn run_cmd(proc: &Process) -> i32 {
+    if is_builtin(proc.cmd.as_str()) {
         return run_builtin(proc);
     }
 
-    let cmd = proc.cmd;
-    let spawn = Command::new(cmd.clone()).args(proc.args).spawn();
+    let cmd = &proc.cmd;
+    let spawn = Command::new(cmd.clone()).args(&proc.args).spawn();
     match spawn {
         Ok(mut child) => {
             let _result = child.wait().expect("failed to wait on child");

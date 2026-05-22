@@ -30,7 +30,7 @@ fn main() {
             args,
         };
 
-        let ret = run_cmd(proc);
+        let ret = run_cmd(&proc);
         if ret == 1 {
             break;
         }

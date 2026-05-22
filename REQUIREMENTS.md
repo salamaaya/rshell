@@ -23,7 +23,7 @@ rshell TODO Checklist
 - [x] Handle invalid commands
 
 ## 4. Built-in Commands
-- [ ] cd
+- [x] cd
     - Implement cd
     - Handle invalid directories
     - Support cd ..
@@ -31,7 +31,7 @@ rshell TODO Checklist
 - [ ] pwd
 - [ ] echo
 - [ ] clear
-- [ ] exit
+- [x] exit
 
 ## 5. Lexer
 - [ ] Token Infrastructure
