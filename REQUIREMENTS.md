@@ -28,7 +28,7 @@ rshell TODO Checklist
     - Handle invalid directories
     - Support cd ..
     - Support cd ~
-- [ ] pwd
+- [x] pwd
 - [ ] echo
 - [ ] clear
 - [x] exit
