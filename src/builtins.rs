@@ -20,7 +20,7 @@ pub fn run_builtin(proc: &Process) -> i32 {
     } else if cmd == "cd" {
         chdir(proc);
     } else if cmd == "pwd" {
-        pwd();
+        pwd(proc);
     } else if cmd == "echo" {
         println!("TODO!");
     } else if cmd == "clear" {
@@ -59,14 +59,18 @@ fn chdir(proc: &Process) {
         if path.is_dir() {
             assert!(env::set_current_dir(path).is_ok());
         } else {
-            println!("invalid directory {dir}");
+            println!("cd: invalid directory {dir}");
         }
     } else {
-        println!("incorrect number of args to cd");
+        println!("cd: incorrect args");
     }
 }
 
-fn pwd() {
-    let path = env::current_dir().expect("unable to find current directory");
-    println!("{}", path.display());
+fn pwd(proc: &Process) {
+    if proc.args.is_empty() {
+        let path = env::current_dir().expect("unable to find current directory");
+        println!("{}", path.display());
+    } else {
+        println!("pwd: too many args");
+    }
 }
