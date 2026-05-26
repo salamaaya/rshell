@@ -1,5 +1,5 @@
-use crate::builtins::is_builtin;
-use crate::builtins::run_builtin;
+use crate::builtin::is_builtin;
+use crate::builtin::run_builtin;
 
 use std::process::Command;
 

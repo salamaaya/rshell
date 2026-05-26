@@ -1,4 +1,4 @@
-mod builtins;
+mod builtin;
 mod process;
 
 use crate::process::Process;
