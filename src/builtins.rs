@@ -24,7 +24,7 @@ pub fn run_builtin(proc: &Process) -> i32 {
     } else if cmd == "echo" {
         println!("TODO!");
     } else if cmd == "clear" {
-        println!("TODO!");
+        clear();
     }
 
     0
@@ -73,4 +73,14 @@ fn pwd(proc: &Process) {
     } else {
         println!("pwd: too many args");
     }
+}
+
+fn clear() {
+    /*
+     * https://stackoverflow.com/a/62101709
+     * \x1B is the ESC character (ASCII 27).
+     * [2J clears the entire terminal screen.
+     * [1;1H moves the cursor to row 1, column 1 (top-left).
+     */
+    print!("\x1B[2J\x1B[1;1H");
 }

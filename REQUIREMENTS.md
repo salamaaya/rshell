@@ -30,7 +30,7 @@ rshell TODO Checklist
     - Support cd ~
 - [x] pwd
 - [ ] echo
-- [ ] clear
+- [x] clear
 - [x] exit
 
 ## 5. Lexer
