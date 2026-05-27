@@ -22,7 +22,7 @@ pub fn run_builtin(proc: &Process) -> i32 {
     } else if cmd == "pwd" {
         pwd(proc);
     } else if cmd == "echo" {
-        println!("TODO!");
+        echo(proc);
     } else if cmd == "clear" {
         clear();
     }
@@ -83,4 +83,62 @@ fn clear() {
      * [1;1H moves the cursor to row 1, column 1 (top-left).
      */
     print!("\x1B[2J\x1B[1;1H");
+}
+
+/*
+* the possible options supported:
+*   -n     do not output the trailing newline
+*   -e     enable interpretation of backslash escapes
+*   -E     disable interpretation of backslash escapes (default)
+*/
+fn echo(proc: &Process) {
+    let mut flag_n = false;
+    let mut flag_e = false;
+    let mut found_flags = false;
+
+    for arg in &proc.args {
+        // first, find the flags
+        // note: E is default anyways so we don't need to check for that
+        if !found_flags && arg.starts_with('-') {
+            if arg.contains("n") {
+                flag_n = true;
+            }
+            if arg.contains("e") {
+                flag_e = true;
+            }
+        } else {
+            found_flags = true;
+
+            if flag_e {
+                interp_echo(arg);
+            } else {
+                print!("{arg} ");
+            }
+        }
+    }
+
+    if !flag_n {
+        println!("");
+    }
+}
+
+/*
+* \\     backslash
+* \a     alert (BEL)
+* \b     backspace
+* \c     produce no further output
+* \e     escape
+* \f     form feed
+* \n     new line
+* \r     carriage return
+* \t     horizontal tab
+* \v     vertical tab
+* \0NNN  byte with octal value NNN (1 to 3 digits)
+* \xHH   byte with hexadecimal value HH (1 to 2 digits)
+*/
+fn interp_echo(str: &String) {
+    print!("interp_echo: TODO!");
+    for c in str.chars() {
+        print!("{c}");
+    }
 }
