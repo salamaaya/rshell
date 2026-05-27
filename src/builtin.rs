@@ -95,6 +95,7 @@ fn echo(proc: &Process) {
     let mut flag_n = false;
     let mut flag_e = false;
     let mut found_flags = false;
+    let mut output = String::new();
 
     for arg in &proc.args {
         // first, find the flags
@@ -109,16 +110,19 @@ fn echo(proc: &Process) {
         } else {
             found_flags = true;
 
-            if flag_e {
-                interp_echo(arg);
-            } else {
-                print!("{arg} ");
-            }
+            output.push_str(arg);
+            output.push(' ');
         }
     }
 
+    if flag_e {
+        interp_echo(&output);
+    } else {
+        print!("{output}");
+    }
+
     if !flag_n {
-        println!("");
+        println!();
     }
 }
 
@@ -136,17 +140,23 @@ fn echo(proc: &Process) {
 * \0NNN  byte with octal value NNN (1 to 3 digits)
 * \xHH   byte with hexadecimal value HH (1 to 2 digits)
 */
-fn interp_echo(str: &String) {
-    let mut prev = ' ';
-    let mut output = String::from("");
+fn interp_echo(str: &str) {
+    let mut output = String::new();
+    let chars: Vec<(usize, char)> = str.char_indices().collect();
+    let mut i = 0;
 
-    for (i, c) in str.char_indices() {
-        if prev == '\\' && i > 0 {
-            match c {
-                '\\' => output.push(c),
+    while i < chars.len() {
+        let (_idx, c) = chars[i];
+
+        if c == '\\' && i + 1 < chars.len() {
+            let (_next_idx, next) = chars[i + 1];
+
+            match next {
+                '\\' => {
+                    output.push('\\');
+                }
                 'b' => {
                     output.pop();
-                    ()
                 }
                 'c' => print!("TODO!"),
                 'e' => print!("TODO!"),
@@ -156,13 +166,16 @@ fn interp_echo(str: &String) {
                 'v' => print!("TODO!"),
                 '0' => print!("TODO!"),
                 'x' => print!("TODO!"),
-                _ => println!("echo: invalid special character {c}"),
+                _ => eprintln!("echo: invalid special character {next}"),
             }
-        } else if c != '\\' {
-            output.push(c);
-        }
 
-        prev = c;
+            i += 2;
+        } else {
+            if c != '\\' {
+                output.push(c);
+            }
+            i += 1;
+        }
     }
 
     print!("{output}");
