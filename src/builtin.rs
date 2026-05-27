@@ -137,8 +137,33 @@ fn echo(proc: &Process) {
 * \xHH   byte with hexadecimal value HH (1 to 2 digits)
 */
 fn interp_echo(str: &String) {
-    print!("interp_echo: TODO!");
-    for c in str.chars() {
-        print!("{c}");
+    let mut prev = ' ';
+    let mut output = String::from("");
+
+    for (i, c) in str.char_indices() {
+        if prev == '\\' && i > 0 {
+            match c {
+                '\\' => output.push(c),
+                'b' => {
+                    output.pop();
+                    ()
+                }
+                'c' => print!("TODO!"),
+                'e' => print!("TODO!"),
+                'f' => print!("TODO!"),
+                'n' => print!("TODO!"),
+                'r' => print!("TODO!"),
+                'v' => print!("TODO!"),
+                '0' => print!("TODO!"),
+                'x' => print!("TODO!"),
+                _ => println!("echo: invalid special character {c}"),
+            }
+        } else if c != '\\' {
+            output.push(c);
+        }
+
+        prev = c;
     }
+
+    print!("{output}");
 }
