@@ -25,7 +25,7 @@ pub fn run_cmd(proc: &Process) -> i32 {
             let _result = child.wait().expect("failed to wait on child");
         }
         Err(_error) => {
-            println!("failed to execute, unkown command {cmd}");
+            eprintln!("failed to execute, unkown command {cmd}");
         }
     }
 

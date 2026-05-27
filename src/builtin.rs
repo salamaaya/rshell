@@ -59,10 +59,10 @@ fn chdir(proc: &Process) {
         if path.is_dir() {
             assert!(env::set_current_dir(path).is_ok());
         } else {
-            println!("cd: invalid directory {dir}");
+            eprintln!("cd: invalid directory {dir}");
         }
     } else {
-        println!("cd: incorrect args");
+        eprintln!("cd: incorrect args");
     }
 }
 
@@ -71,7 +71,7 @@ fn pwd(proc: &Process) {
         let path = env::current_dir().expect("unable to find current directory");
         println!("{}", path.display());
     } else {
-        println!("pwd: too many args");
+        eprintln!("pwd: too many args");
     }
 }
 
