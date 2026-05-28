@@ -172,7 +172,9 @@ fn interp_echo(str: &str) {
                         output.push(' ');
                     }
                 }
-                'n' => print!("TODO!"),
+                'n' => {
+                    output.push('\n');
+                }
                 'r' => print!("TODO!"),
                 'v' => print!("TODO!"),
                 '0' => print!("TODO!"),
