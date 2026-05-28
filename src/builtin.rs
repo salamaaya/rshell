@@ -144,6 +144,7 @@ fn interp_echo(str: &str) {
     let mut output = String::new();
     let chars: Vec<(usize, char)> = str.char_indices().collect();
     let mut i = 0;
+    let mut chars_to_delete = 0;
 
     while i < chars.len() {
         let (_idx, c) = chars[i];
@@ -162,7 +163,7 @@ fn interp_echo(str: &str) {
                     print!("{output}");
                     return;
                 }
-                'e' => print!("TODO!"),
+                'e' => chars_to_delete += 1,
                 'f' => print!("TODO!"),
                 'n' => print!("TODO!"),
                 'r' => print!("TODO!"),
@@ -176,6 +177,10 @@ fn interp_echo(str: &str) {
         } else {
             if c != '\\' {
                 output.push(c);
+            }
+            if chars_to_delete > 0 {
+                output.pop();
+                chars_to_delete -= 1;
             }
             i += 1;
         }
