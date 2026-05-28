@@ -158,7 +158,10 @@ fn interp_echo(str: &str) {
                 'b' => {
                     output.pop();
                 }
-                'c' => print!("TODO!"),
+                'c' => {
+                    print!("{output}");
+                    return;
+                }
                 'e' => print!("TODO!"),
                 'f' => print!("TODO!"),
                 'n' => print!("TODO!"),
