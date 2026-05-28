@@ -185,14 +185,14 @@ fn interp_echo(str: &str) {
             i += 2;
         } else {
             if c != '\\' {
-                output.push(c);
-                curr_line_len += 1;
+                if chars_to_delete > 0 {
+                    chars_to_delete -= 1;
+                } else {
+                    output.push(c);
+                    curr_line_len += 1;
+                }
             }
-            if chars_to_delete > 0 {
-                output.pop();
-                chars_to_delete -= 1;
-                curr_line_len -= 1;
-            }
+
             i += 1;
         }
     }
