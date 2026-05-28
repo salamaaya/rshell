@@ -174,6 +174,7 @@ fn interp_echo(str: &str) {
                 }
                 'n' => {
                     output.push('\n');
+                    curr_line_len = 0;
                 }
                 'r' => print!("TODO!"),
                 'v' => print!("TODO!"),
