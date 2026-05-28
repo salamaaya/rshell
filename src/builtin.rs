@@ -145,6 +145,7 @@ fn interp_echo(str: &str) {
     let chars: Vec<(usize, char)> = str.char_indices().collect();
     let mut i = 0;
     let mut chars_to_delete = 0;
+    let mut curr_line_len = 0;
 
     while i < chars.len() {
         let (_idx, c) = chars[i];
@@ -158,13 +159,19 @@ fn interp_echo(str: &str) {
                 }
                 'b' => {
                     output.pop();
+                    curr_line_len -= 1;
                 }
                 'c' => {
                     print!("{output}");
                     return;
                 }
                 'e' => chars_to_delete += 1,
-                'f' => print!("TODO!"),
+                'f' => {
+                    output.push('\n');
+                    for _ in 0..curr_line_len {
+                        output.push(' ');
+                    }
+                }
                 'n' => print!("TODO!"),
                 'r' => print!("TODO!"),
                 'v' => print!("TODO!"),
@@ -177,10 +184,12 @@ fn interp_echo(str: &str) {
         } else {
             if c != '\\' {
                 output.push(c);
+                curr_line_len += 1;
             }
             if chars_to_delete > 0 {
                 output.pop();
                 chars_to_delete -= 1;
+                curr_line_len -= 1;
             }
             i += 1;
         }
