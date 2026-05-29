@@ -1,8 +1,5 @@
-mod builtin;
-mod process;
-
-use crate::process::Process;
-use crate::process::run_cmd;
+use rshell::process::Process;
+use rshell::process::run_cmd;
 
 use std::io;
 use std::io::Write;

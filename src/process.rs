@@ -1,6 +1,7 @@
 use crate::builtin::is_builtin;
 use crate::builtin::run_builtin;
 
+use std::io;
 use std::process::Command;
 
 pub struct Process {
@@ -15,7 +16,7 @@ pub struct Process {
  */
 pub fn run_cmd(proc: &Process) -> i32 {
     if is_builtin(proc.cmd.as_str()) {
-        return run_builtin(proc);
+        return run_builtin(&mut io::stdout(), proc);
     }
 
     let cmd = &proc.cmd;

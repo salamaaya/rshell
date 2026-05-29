@@ -2,6 +2,7 @@ use crate::process::Process;
 
 use lazy_regex::regex_replace_all;
 use std::env;
+use std::io;
 use std::path::Path;
 use string_replace_all::string_replace_all;
 use unicode_segmentation::UnicodeSegmentation;
@@ -15,16 +16,16 @@ pub fn is_builtin(cmd: &str) -> bool {
     false
 }
 
-pub fn run_builtin(proc: &Process) -> i32 {
+pub fn run_builtin(out: &mut dyn io::Write, proc: &Process) -> i32 {
     let cmd = &proc.cmd;
     if cmd == "exit" {
         return 1;
     } else if cmd == "cd" {
         chdir(proc);
     } else if cmd == "pwd" {
-        pwd(proc);
+        pwd(out, proc);
     } else if cmd == "echo" {
-        echo(proc);
+        echo(out, proc);
     } else if cmd == "clear" {
         clear();
     }
@@ -46,7 +47,7 @@ fn chdir(proc: &Process) {
     let home_dir = match get_home() {
         Ok(home) => home,
         Err(error) => {
-            println!("{error}");
+            eprintln!("{error}");
             return;
         }
     };
@@ -68,10 +69,10 @@ fn chdir(proc: &Process) {
     }
 }
 
-fn pwd(proc: &Process) {
+fn pwd(out: &mut dyn io::Write, proc: &Process) {
     if proc.args.is_empty() {
         let path = env::current_dir().expect("unable to find current directory");
-        println!("{}", path.display());
+        assert!(writeln!(out, "{}", path.display()).is_ok());
     } else {
         eprintln!("pwd: too many args");
     }
@@ -93,7 +94,7 @@ fn clear() {
 *   -e     enable interpretation of backslash escapes
 *   -E     disable interpretation of backslash escapes (default)
 */
-fn echo(proc: &Process) {
+fn echo(out: &mut dyn io::Write, proc: &Process) {
     let mut flag_n = false;
     let mut flag_e = false;
     let mut found_flags = false;
@@ -118,13 +119,13 @@ fn echo(proc: &Process) {
     }
 
     if flag_e {
-        interp_echo(&output);
+        interp_echo(&mut io::stdout(), &output);
     } else {
-        print!("{output}");
+        assert!(write!(out, "{output}").is_ok());
     }
 
     if !flag_n {
-        println!();
+        assert!(writeln!(out).is_ok());
     }
 }
 
@@ -142,7 +143,7 @@ fn echo(proc: &Process) {
 * \0NNN  byte with octal value NNN (1 to 3 digits)
 * \xHH   byte with hexadecimal value HH (1 to 2 digits)
 */
-fn interp_echo(str: &str) {
+fn interp_echo(out: &mut dyn io::Write, str: &str) {
     let output = str.replace("\\\\", "\\");
     let output = output.replace("\\a", "\u{07}");
     let output = output.replace("\\b", "\u{08}");
@@ -170,7 +171,7 @@ fn interp_echo(str: &str) {
         if i + 1 < output.len() && output_vec[i] == "\\" && output_vec[i + 1] == "c" {
             return;
         } else {
-            print!("{:}", output_vec[i]);
+            assert!(write!(out, "{:}", output_vec[i]).is_ok());
         }
     }
 }
