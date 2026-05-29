@@ -29,9 +29,12 @@ rshell TODO Checklist
     - Support cd ..
     - Support cd ~
 - [x] pwd
-- [ ] echo
+- [x] echo
+    - implement the different flags of echo
+    - implement interpretation of escape characters
 - [x] clear
 - [x] exit
+- [ ] testing
 
 ## 5. Lexer
 - [ ] Token Infrastructure
