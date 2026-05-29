@@ -8,6 +8,11 @@ cargo build
 cargo run
 ```
 
+### Test
+```bash
+cargo test 
+```
+
 ### Example Usage 
 ```bash
 $ cargo run
