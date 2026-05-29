@@ -4,4 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+lazy-regex = "3.6.0"
 string-replace-all = "0.2.1"
+unicode-segmentation = "1.13.2"

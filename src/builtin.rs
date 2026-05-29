@@ -1,9 +1,10 @@
 use crate::process::Process;
 
-use std::cmp;
+use lazy_regex::regex_replace_all;
 use std::env;
 use std::path::Path;
 use string_replace_all::string_replace_all;
+use unicode_segmentation::UnicodeSegmentation;
 
 static BUILTINS: [&str; 5] = ["cd", "exit", "pwd", "echo", "clear"];
 
@@ -142,93 +143,34 @@ fn echo(proc: &Process) {
 * \xHH   byte with hexadecimal value HH (1 to 2 digits)
 */
 fn interp_echo(str: &str) {
-    let mut output = String::new();
-    let chars: Vec<(usize, char)> = str.char_indices().collect();
-    let mut i = 0;
-    let mut chars_to_delete = 0;
-    let mut curr_line_len = 0;
-    let mut idx_to_push = 0;
-    let mut start_of_line = 0;
+    let output = str.replace("\\\\", "\\");
+    let output = output.replace("\\a", "\u{07}");
+    let output = output.replace("\\b", "\u{08}");
+    let output = output.replace("\\e", "\u{1B}");
+    let output = output.replace("\\f", "\u{0C}");
+    let output = output.replace("\\n", "\n");
+    let output = output.replace("\\r", "\r");
+    let output = output.replace("\\t", "\t");
+    let output = output.replace("\\v", "\u{0B}");
 
-    while i < chars.len() {
-        let (_idx, c) = chars[i];
+    // https://stackoverflow.com/a/68337748
+    let output = regex_replace_all!(r#"\\0(\d{3})"#, &output, |_, num: &str| {
+        let num: u32 = u32::from_str_radix(num, 8).unwrap();
+        let c: char = std::char::from_u32(num).unwrap();
+        c.to_string()
+    });
+    let output = regex_replace_all!(r#"\\x(\d{2})"#, &output, |_, num: &str| {
+        let num: u32 = u32::from_str_radix(num, 16).unwrap();
+        let c: char = std::char::from_u32(num).unwrap();
+        c.to_string()
+    });
 
-        if c == '\\' && i + 1 < chars.len() {
-            let (_next_idx, next) = chars[i + 1];
-
-            match next {
-                '\\' => {
-                    replace_or_push(&mut output, '\\', idx_to_push);
-                    idx_to_push += 1;
-                    curr_line_len += 1;
-                }
-                'b' => {
-                    output.pop();
-                    curr_line_len = cmp::max(0, curr_line_len - 1);
-                    if idx_to_push != 0 {
-                        idx_to_push -= 1;
-                    }
-                }
-                'c' => {
-                    print!("{output}");
-                    return;
-                }
-                'e' => {
-                    chars_to_delete += 1;
-                }
-                'f' => {
-                    replace_or_push(&mut output, '\n', idx_to_push);
-                    idx_to_push += 1;
-
-                    for _ in 0..curr_line_len {
-                        replace_or_push(&mut output, ' ', idx_to_push);
-                        idx_to_push += 1;
-                    }
-
-                    start_of_line = curr_line_len;
-                }
-                'n' => {
-                    replace_or_push(&mut output, '\n', idx_to_push);
-                    idx_to_push += 1;
-                    start_of_line = curr_line_len;
-                    curr_line_len = 0;
-                }
-                'r' => {
-                    idx_to_push = start_of_line;
-                }
-                't' => {
-                    replace_or_push(&mut output, '\t', idx_to_push);
-                    idx_to_push += 1;
-                    curr_line_len += 1;
-                }
-                'v' => print!("TODO!"),
-                '0' => print!("TODO!"),
-                'x' => print!("TODO!"),
-                _ => eprintln!("echo: invalid special character {next}"),
-            }
-
-            i += 2;
+    let output_vec: Vec<&str> = output.graphemes(true).collect();
+    for i in 0..output_vec.len() {
+        if i + 1 < output.len() && output_vec[i] == "\\" && output_vec[i + 1] == "c" {
+            return;
         } else {
-            if chars_to_delete > 0 {
-                chars_to_delete -= 1;
-            } else if c != '\\' {
-                replace_or_push(&mut output, c, idx_to_push);
-                idx_to_push += 1;
-                curr_line_len += 1;
-            }
-
-            i += 1;
+            print!("{:}", output_vec[i]);
         }
-    }
-
-    print!("{output}");
-}
-
-fn replace_or_push(s: &mut String, c: char, idx: usize) {
-    if s.len() <= idx {
-        s.push(c);
-    } else {
-        let c_string = c.to_string();
-        s.replace_range(idx..idx + 1, &c_string);
     }
 }
