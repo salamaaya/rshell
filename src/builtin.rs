@@ -119,7 +119,7 @@ fn echo(out: &mut dyn io::Write, proc: &Process) {
     }
 
     if flag_e {
-        interp_echo(&mut io::stdout(), &output);
+        interp_echo(out, &output);
     } else {
         assert!(write!(out, "{output}").is_ok());
     }
@@ -155,12 +155,12 @@ fn interp_echo(out: &mut dyn io::Write, str: &str) {
     let output = output.replace("\\v", "\u{0B}");
 
     // https://stackoverflow.com/a/68337748
-    let output = regex_replace_all!(r#"\\0(\d{3})"#, &output, |_, num: &str| {
+    let output = regex_replace_all!(r#"\\0(\d{1,3})"#, &output, |_, num: &str| {
         let num: u32 = u32::from_str_radix(num, 8).unwrap();
         let c: char = std::char::from_u32(num).unwrap();
         c.to_string()
     });
-    let output = regex_replace_all!(r#"\\x(\d{2})"#, &output, |_, num: &str| {
+    let output = regex_replace_all!(r#"\\x(\d{1,2})"#, &output, |_, num: &str| {
         let num: u32 = u32::from_str_radix(num, 16).unwrap();
         let c: char = std::char::from_u32(num).unwrap();
         c.to_string()
