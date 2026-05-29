@@ -173,7 +173,9 @@ fn interp_echo(str: &str) {
                     print!("{output}");
                     return;
                 }
-                'e' => chars_to_delete += 1,
+                'e' => {
+                    chars_to_delete += 1;
+                }
                 'f' => {
                     replace_or_push(&mut output, '\n', idx_to_push);
                     idx_to_push += 1;
