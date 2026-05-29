@@ -1,5 +1,6 @@
 use crate::process::Process;
 
+use std::cmp;
 use std::env;
 use std::path::Path;
 use string_replace_all::string_replace_all;
@@ -146,6 +147,8 @@ fn interp_echo(str: &str) {
     let mut i = 0;
     let mut chars_to_delete = 0;
     let mut curr_line_len = 0;
+    let mut idx_to_push = 0;
+    let mut start_of_line = 0;
 
     while i < chars.len() {
         let (_idx, c) = chars[i];
@@ -155,11 +158,16 @@ fn interp_echo(str: &str) {
 
             match next {
                 '\\' => {
-                    output.push('\\');
+                    replace_or_push(&mut output, '\\', idx_to_push);
+                    idx_to_push += 1;
+                    curr_line_len += 1;
                 }
                 'b' => {
                     output.pop();
-                    curr_line_len -= 1;
+                    curr_line_len = cmp::max(0, curr_line_len - 1);
+                    if idx_to_push != 0 {
+                        idx_to_push -= 1;
+                    }
                 }
                 'c' => {
                     print!("{output}");
@@ -167,16 +175,25 @@ fn interp_echo(str: &str) {
                 }
                 'e' => chars_to_delete += 1,
                 'f' => {
-                    output.push('\n');
+                    replace_or_push(&mut output, '\n', idx_to_push);
+                    idx_to_push += 1;
+
                     for _ in 0..curr_line_len {
-                        output.push(' ');
+                        replace_or_push(&mut output, ' ', idx_to_push);
+                        idx_to_push += 1;
                     }
+
+                    start_of_line = curr_line_len;
                 }
                 'n' => {
-                    output.push('\n');
+                    replace_or_push(&mut output, '\n', idx_to_push);
+                    idx_to_push += 1;
+                    start_of_line = curr_line_len;
                     curr_line_len = 0;
                 }
-                'r' => print!("TODO!"),
+                'r' => {
+                    idx_to_push = start_of_line;
+                }
                 'v' => print!("TODO!"),
                 '0' => print!("TODO!"),
                 'x' => print!("TODO!"),
@@ -185,13 +202,12 @@ fn interp_echo(str: &str) {
 
             i += 2;
         } else {
-            if c != '\\' {
-                if chars_to_delete > 0 {
-                    chars_to_delete -= 1;
-                } else {
-                    output.push(c);
-                    curr_line_len += 1;
-                }
+            if chars_to_delete > 0 {
+                chars_to_delete -= 1;
+            } else if c != '\\' {
+                replace_or_push(&mut output, c, idx_to_push);
+                idx_to_push += 1;
+                curr_line_len += 1;
             }
 
             i += 1;
@@ -199,4 +215,13 @@ fn interp_echo(str: &str) {
     }
 
     print!("{output}");
+}
+
+fn replace_or_push(s: &mut String, c: char, idx: usize) {
+    if s.len() <= idx {
+        s.push(c);
+    } else {
+        let c_string = c.to_string();
+        s.replace_range(idx..idx + 1, &c_string);
+    }
 }
