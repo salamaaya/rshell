@@ -196,6 +196,11 @@ fn interp_echo(str: &str) {
                 'r' => {
                     idx_to_push = start_of_line;
                 }
+                't' => {
+                    replace_or_push(&mut output, '\t', idx_to_push);
+                    idx_to_push += 1;
+                    curr_line_len += 1;
+                }
                 'v' => print!("TODO!"),
                 '0' => print!("TODO!"),
                 'x' => print!("TODO!"),
