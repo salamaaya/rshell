@@ -34,10 +34,10 @@ rshell TODO Checklist
     - implement interpretation of escape characters
 - [x] clear
 - [x] exit
-- [ ] testing
+- [x] testing
 
 ## 5. Lexer
-- [ ] Token Infrastructure
+- [x] Token Infrastructure
     - Create token enum
     - Implement lexer state machine
     - Tokenize plain words
