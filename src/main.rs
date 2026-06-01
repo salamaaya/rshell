@@ -33,8 +33,8 @@ fn main() {
         };
 
         /* TESTING LEXER ONLY!!! */
-        let tokens = lex(&input.to_string()).expect("failed to lex");
-        print!("{:?}", tokens);
+        /* let tokens = lex(&input.to_string()).expect("failed to lex");
+        print!("{:?}", tokens); */
 
         let ret = run_cmd(&proc);
         if ret == 1 {

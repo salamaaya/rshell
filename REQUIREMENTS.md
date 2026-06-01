@@ -56,7 +56,7 @@ rshell TODO Checklist
     - Tokenize &&
     - Tokenize ||
     - Tokenize &
-- [ ] Testing
+- [x] Testing
 
 ## 6. Parser & AST
 - [ ] AST
