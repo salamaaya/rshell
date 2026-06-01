@@ -9,6 +9,11 @@ pub enum Token {
     DoubleQuote(String),
     Semicolon(String),
     Dollar(String),
+
+    Escape(String),
+    Backslash(String),
+    Slash(String),
+
     LeftParen(String),
     RightParen(String),
     LeftCurlyBracket(String),
@@ -19,6 +24,7 @@ pub enum Token {
     RedirectOutput(String),
     RedirectOutputAppend(String),
     Background(String),
+
     And(String),
     Or(String),
 }
@@ -129,9 +135,10 @@ pub fn lex(input: &String) -> Result<Vec<Token>, String> {
                 it.next();
             }
             '$' => {
-                result.push(Token::Semicolon("$".to_string()));
+                result.push(Token::Dollar("$".to_string()));
                 it.next();
             }
+
             '(' => {
                 result.push(Token::LeftParen("(".to_string()));
                 it.next();
@@ -146,6 +153,21 @@ pub fn lex(input: &String) -> Result<Vec<Token>, String> {
             }
             '}' => {
                 result.push(Token::RightCurlyBracket("}".to_string()));
+                it.next();
+            }
+
+            '\\' => {
+                it.next();
+                let ch = it.peek();
+                if let Some(escape_char) = ch {
+                    result.push(Token::Escape(escape_char.to_string()));
+                    it.next();
+                } else {
+                    result.push(Token::Backslash("\\".to_string()));
+                }
+            }
+            '/' => {
+                result.push(Token::Slash("/".to_string()));
                 it.next();
             }
 

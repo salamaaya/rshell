@@ -41,14 +41,14 @@ rshell TODO Checklist
     - Create token enum
     - Implement lexer state machine
     - Tokenize plain words
-- [ ] Quotes
+- [x] Quotes
     - Support double quotes
     - Support single quotes
     - Handle unterminated quotes
-- [ ] Escaping
+- [x] Escaping
     - Support escaped characters
     - Support escaped spaces
-- [ ] Operators
+- [x] Operators
     - Tokenize |
     - Tokenize >
     - Tokenize >>
