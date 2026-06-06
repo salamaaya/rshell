@@ -97,14 +97,14 @@ pub fn lex(input: &String) -> Result<Vec<Token>, String> {
                 }
                 result.push(Token::Num(num));
             }
-            'A'..='Z' | 'a'..='z' => {
+            'A'..='Z' | 'a'..='z' | '-' | '.' => {
                 let mut s = String::new();
                 s.push(c);
 
                 it.next();
                 let mut ch = it.peek();
                 while let Some(&i) = ch {
-                    if !i.is_digit(10) && !i.is_alphabetic() {
+                    if !i.is_digit(10) && !i.is_alphabetic() && !(i == '.') {
                         ch = None;
                     } else {
                         s.push(i);
