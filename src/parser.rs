@@ -1,26 +1,37 @@
 use crate::lexer::Token;
 
-#[derive(Debug, Clone)]
-enum Expr {
-    Num(f64),
-    Command(String, Box<Expr>),
-    Pipe(i32, i32),            /* new stdin, new stdout */
-    RedirectInput(i32),        /* new stdin */
-    RedirectOutput(i32),       /* new stdout */
-    RedirectOutputAppend(i32), /* new stdout */
-    And(Box<Expr>, Box<Expr>),
-    Or(Box<Expr>, Box<Expr>),
+pub enum Operator {
+    Pipe,                 // |
+    RedirectInput,        // <
+    RedirectOutput,       // >
+    RedirectOutputAppend, // >>
+    And,                  // &&
+    Or,                   // ||
 }
 
-fn parse(tokens: &Vec<Token>) -> Result<Expr, String> {
-    let expr = expr()?;
+pub enum Node {
+    Command {
+        program: String,
+        args: Vec<String>,
+    },
+
+    Redirect {
+        op: Operator,
+        command: Box<Node>,
+        file: String,
+    },
+
+    Binary {
+        op: Operator,
+        left: Box<Node>,
+        right: Box<Node>,
+    },
+}
+
+fn parse(tokens: &Vec<Token>) -> Result<Node, String> {
+    let expr = expr(tokens)?;
+
     Ok(expr)
 }
 
-fn expr() -> Result<Expr, String> {
-    print!("TODO");
-}
-
-fn term() -> Result<Expr, String> {
-    print!("TODO");
-}
+fn expr(tokens: &Vec<Token>) -> Result<Node, String> {}
