@@ -59,7 +59,7 @@ rshell TODO Checklist
 - [x] Testing
 
 ## 6. Parser & AST
-- [ ] AST
+- [x] AST
     - Design AST node types
     - Implement command AST nodes
     - Implement pipe AST nodes
