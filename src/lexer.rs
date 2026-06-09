@@ -2,31 +2,30 @@
 
 #[derive(Debug, Clone)]
 pub enum Token {
-    Num(f64),
     Id(String),
 
-    SingleQuote(String),
-    DoubleQuote(String),
-    Semicolon(String),
-    Dollar(String),
+    SingleQuote,
+    DoubleQuote,
+    Semicolon,
+    Dollar,
 
     Escape(String),
-    Backslash(String),
-    Slash(String),
+    Backslash,
+    Slash,
 
-    LeftParen(String),
-    RightParen(String),
-    LeftCurlyBracket(String),
-    RightCurlyBracket(String),
+    LeftParen,
+    RightParen,
+    LeftCurlyBracket,
+    RightCurlyBracket,
 
-    Pipe(String),
-    RedirectInput(String),
-    RedirectOutput(String),
-    RedirectOutputAppend(String),
-    Background(String),
+    Pipe,
+    RedirectInput,
+    RedirectOutput,
+    RedirectOutputAppend,
+    Background,
 
-    And(String),
-    Or(String),
+    And,
+    Or,
 }
 
 pub fn lex(input: &String) -> Result<Vec<Token>, String> {
@@ -52,51 +51,6 @@ pub fn lex(input: &String) -> Result<Vec<Token>, String> {
                 it.next();
             }
 
-            '0'..='9' => {
-                let mut num = c
-                    .to_string()
-                    .parse()
-                    .expect("lexer: character not a digit.");
-
-                it.next();
-                let mut digit_char = it.peek();
-
-                while let Some(&i) = digit_char {
-                    if !i.is_digit(10) {
-                        if i == '.' {
-                            let mut d = 10.0;
-                            it.next();
-                            digit_char = it.peek();
-
-                            while let Some(&j) = digit_char {
-                                if !j.is_digit(10) {
-                                    digit_char = None;
-                                } else {
-                                    let f: f64 = j
-                                        .to_string()
-                                        .parse()
-                                        .expect("lexer: character not a digit.");
-                                    num = num + f / d;
-                                    d = d * 10.0;
-                                    it.next();
-                                    digit_char = it.peek();
-                                }
-                            }
-                        } else {
-                            digit_char = None;
-                        }
-                    } else {
-                        let digit: f64 = i
-                            .to_string()
-                            .parse()
-                            .expect("lexer: character not a digit.");
-                        num = num * 10.0 + digit;
-                        it.next();
-                        digit_char = it.peek();
-                    }
-                }
-                result.push(Token::Num(num));
-            }
             'A'..='Z' | 'a'..='z' | '-' | '.' => {
                 let mut s = String::new();
                 s.push(c);
@@ -123,36 +77,36 @@ pub fn lex(input: &String) -> Result<Vec<Token>, String> {
             }
 
             '\'' => {
-                result.push(Token::SingleQuote("\'".to_string()));
+                result.push(Token::SingleQuote);
                 it.next();
             }
             '\"' => {
-                result.push(Token::DoubleQuote("\"".to_string()));
+                result.push(Token::DoubleQuote);
                 it.next();
             }
             ';' => {
-                result.push(Token::Semicolon(";".to_string()));
+                result.push(Token::Semicolon);
                 it.next();
             }
             '$' => {
-                result.push(Token::Dollar("$".to_string()));
+                result.push(Token::Dollar);
                 it.next();
             }
 
             '(' => {
-                result.push(Token::LeftParen("(".to_string()));
+                result.push(Token::LeftParen);
                 it.next();
             }
             ')' => {
-                result.push(Token::RightParen(")".to_string()));
+                result.push(Token::RightParen);
                 it.next();
             }
             '{' => {
-                result.push(Token::LeftCurlyBracket("{".to_string()));
+                result.push(Token::LeftCurlyBracket);
                 it.next();
             }
             '}' => {
-                result.push(Token::RightCurlyBracket("}".to_string()));
+                result.push(Token::RightCurlyBracket);
                 it.next();
             }
 
@@ -163,11 +117,11 @@ pub fn lex(input: &String) -> Result<Vec<Token>, String> {
                     result.push(Token::Escape(escape_char.to_string()));
                     it.next();
                 } else {
-                    result.push(Token::Backslash("\\".to_string()));
+                    result.push(Token::Backslash);
                 }
             }
             '/' => {
-                result.push(Token::Slash("/".to_string()));
+                result.push(Token::Slash);
                 it.next();
             }
 
@@ -175,34 +129,34 @@ pub fn lex(input: &String) -> Result<Vec<Token>, String> {
                 it.next();
                 let ch = it.peek();
                 if let Some('|') = ch {
-                    result.push(Token::Or("||".to_string()));
+                    result.push(Token::Or);
                     it.next();
                 } else {
-                    result.push(Token::Pipe("|".to_string()));
+                    result.push(Token::Pipe);
                 }
             }
             '<' => {
-                result.push(Token::RedirectInput("<".to_string()));
+                result.push(Token::RedirectInput);
                 it.next();
             }
             '>' => {
                 it.next();
                 let ch = it.peek();
                 if let Some('>') = ch {
-                    result.push(Token::RedirectOutputAppend(">>".to_string()));
+                    result.push(Token::RedirectOutputAppend);
                     it.next();
                 } else {
-                    result.push(Token::RedirectOutput(">".to_string()));
+                    result.push(Token::RedirectOutput);
                 }
             }
             '&' => {
                 it.next();
                 let ch = it.peek();
                 if let Some('&') = ch {
-                    result.push(Token::And("&&".to_string()));
+                    result.push(Token::And);
                     it.next();
                 } else {
-                    result.push(Token::Background("&".to_string()));
+                    result.push(Token::Background);
                 }
             }
 
