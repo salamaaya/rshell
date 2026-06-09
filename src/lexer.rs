@@ -47,23 +47,27 @@ pub fn lex(input: &str) -> Result<Vec<Token>, String> {
 
             'A'..='Z' | 'a'..='z' | '-' | '.' | '\\' | '/' => {
                 let mut s = String::new();
-                s.push(c);
-
-                it.next();
                 let mut ch = it.peek();
                 while let Some(&i) = ch {
-                    if !i.is_ascii_digit() && !i.is_alphabetic() && (i != '.') && (i != '\\') {
+                    if !i.is_ascii_digit()
+                        && !i.is_alphabetic()
+                        && (i != '-')
+                        && (i != '.')
+                        && (i != '\\')
+                    {
                         break;
                     } else if i == '\\' {
                         it.next();
                         ch = it.peek();
                         match ch {
-                            Some('\\') => {
-                                it.next();
-                                ch = it.peek();
-                                s.push('\\')
+                            Some(&c) => {
+                                if is_special(c) {
+                                    s.push(c);
+                                    it.next();
+                                    ch = it.peek();
+                                }
                             }
-                            _ => continue,
+                            _ => break,
                         }
                     } else {
                         s.push(i);
@@ -194,4 +198,12 @@ pub fn lex(input: &str) -> Result<Vec<Token>, String> {
     }
 
     Ok(result)
+}
+
+fn is_special(c: char) -> bool {
+    match c {
+        '\"' | '\'' | '\\' | '#' | '=' | '&' | '|' | '>' | '<' | ';' | '{' | '}' | '(' | ')'
+        | '!' | '$' => true,
+        _ => false,
+    }
 }
