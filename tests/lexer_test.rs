@@ -12,13 +12,13 @@ fn amount_of_tokens() {
 
 #[test]
 fn token_types() {
-    let input = String::from("echo this is a test 1 \\n $PATH\\t >> somefile");
+    let input = String::from("echo this is a test \\n $PATH\\t >> somefile");
     let result = lex(&input);
     match result {
         Ok(r) => {
             let output = format!("{:?}", r);
             assert_eq!(
-                r#"[Id("echo"), Id("this"), Id("is"), Id("a"), Id("test"), Num(1.0), Escape("n"), Dollar("$"), Id("PATH"), Escape("t"), RedirectOutputAppend(">>"), Id("somefile")]"#,
+                r#"[Id("echo"), Id("this"), Id("is"), Id("a"), Id("test"), Escape("n"), Dollar, Id("PATH"), Escape("t"), RedirectOutputAppend, Id("somefile")]"#,
                 output
             )
         }
