@@ -107,7 +107,7 @@ rshell TODO Checklist
     - Test append behavior
 
 ## 9. Environment Variables
-- [ ] Variables
+- [x] Variables
     - Read environment variables
     - Expand $VAR, $HOME, $PATH, etc.
 - [ ] Export

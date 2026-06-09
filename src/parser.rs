@@ -98,14 +98,6 @@ fn build_command_node(
                 }
             }
 
-            Token::Escape(c) => {
-                println!("TODO: \\{c}");
-                break;
-            }
-            Token::Backslash => {
-                println!("TODO: \\");
-                break;
-            }
             Token::Slash => {
                 println!("TODO: /");
                 break;

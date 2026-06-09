@@ -7,8 +7,6 @@ pub enum Token {
     Semicolon,
     Dollar,
 
-    Escape(String),
-    Backslash,
     Slash,
 
     LeftParen,
@@ -49,15 +47,26 @@ pub fn lex(input: &str) -> Result<Vec<Token>, String> {
                 it.next();
             }
 
-            'A'..='Z' | 'a'..='z' | '-' | '.' => {
+            'A'..='Z' | 'a'..='z' | '-' | '.' | '\\' => {
                 let mut s = String::new();
                 s.push(c);
 
                 it.next();
                 let mut ch = it.peek();
                 while let Some(&i) = ch {
-                    if !i.is_ascii_digit() && !i.is_alphabetic() && (i != '.') {
-                        ch = None;
+                    if !i.is_ascii_digit() && !i.is_alphabetic() && (i != '.') && (i != '\\') {
+                        break;
+                    } else if i == '\\' {
+                        it.next();
+                        ch = it.peek();
+                        match ch {
+                            Some('\\') => {
+                                it.next();
+                                ch = it.peek();
+                                s.push('\\')
+                            }
+                            _ => continue,
+                        }
                     } else {
                         s.push(i);
                         it.next();
@@ -144,16 +153,6 @@ pub fn lex(input: &str) -> Result<Vec<Token>, String> {
                 it.next();
             }
 
-            '\\' => {
-                it.next();
-                let ch = it.peek();
-                if let Some(escape_char) = ch {
-                    result.push(Token::Escape(escape_char.to_string()));
-                    it.next();
-                } else {
-                    result.push(Token::Backslash);
-                }
-            }
             '/' => {
                 result.push(Token::Slash);
                 it.next();
