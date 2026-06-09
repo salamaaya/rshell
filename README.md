@@ -21,3 +21,7 @@ Cargo.lock  Cargo.toml  README.md  REQUIREMENTS.md  src  target
 rshell$ exit
 $
 ```
+
+
+#### Useful links
+- https://mywiki.wooledge.org/BashGuide/SpecialCharacters
