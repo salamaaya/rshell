@@ -7,8 +7,6 @@ pub enum Token {
     Semicolon,
     Dollar,
 
-    Slash,
-
     LeftParen,
     RightParen,
     LeftCurlyBracket,
@@ -47,7 +45,7 @@ pub fn lex(input: &str) -> Result<Vec<Token>, String> {
                 it.next();
             }
 
-            'A'..='Z' | 'a'..='z' | '-' | '.' | '\\' => {
+            'A'..='Z' | 'a'..='z' | '-' | '.' | '\\' | '/' => {
                 let mut s = String::new();
                 s.push(c);
 
@@ -150,11 +148,6 @@ pub fn lex(input: &str) -> Result<Vec<Token>, String> {
             }
             '}' => {
                 result.push(Token::RightCurlyBracket);
-                it.next();
-            }
-
-            '/' => {
-                result.push(Token::Slash);
                 it.next();
             }
 

@@ -98,11 +98,6 @@ fn build_command_node(
                 }
             }
 
-            Token::Slash => {
-                println!("TODO: /");
-                break;
-            }
-
             Token::LeftParen => {
                 println!("TODO: (");
                 break;
