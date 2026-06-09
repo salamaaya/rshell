@@ -3,6 +3,8 @@ use crate::{
     process::{Process, run_cmd},
 };
 
+use std::env;
+
 pub enum Operator {
     Pipe,                 // |
     RedirectInput,        // <
@@ -46,7 +48,7 @@ fn build_ast(tokens: &[Token]) -> Result<Vec<Node>, String> {
         let curr_tok = &tokens[i];
         match curr_tok {
             Token::Id(cmd) => {
-                i = build_command_node(cmd.to_string(), tokens, i, &mut ast);
+                i = build_command_node(cmd.to_string(), tokens, i, &mut ast)?;
             }
 
             _ => print!("TODO"),
@@ -58,16 +60,21 @@ fn build_ast(tokens: &[Token]) -> Result<Vec<Node>, String> {
     Ok(ast)
 }
 
-fn build_command_node(cmd: String, tokens: &[Token], mut i: usize, ast: &mut Vec<Node>) -> usize {
+fn build_command_node(
+    cmd: String,
+    tokens: &[Token],
+    mut i: usize,
+    ast: &mut Vec<Node>,
+) -> Result<usize, String> {
     let len = tokens.len();
     let mut args = vec![];
 
     i += 1;
 
     while i < len {
-        let curr_arg = &tokens[i];
+        let mut curr_token = &tokens[i];
 
-        match curr_arg {
+        match curr_token {
             Token::Id(arg) => args.push(arg.to_string()),
 
             Token::Semicolon => {
@@ -75,8 +82,20 @@ fn build_command_node(cmd: String, tokens: &[Token], mut i: usize, ast: &mut Vec
                 break;
             }
             Token::Dollar => {
-                println!("TODO: $");
-                break;
+                i += 1;
+                if i >= len {
+                    args.push("$".to_string());
+                    break;
+                }
+
+                curr_token = &tokens[i];
+                match curr_token {
+                    Token::Id(key) => match env::var(key) {
+                        Ok(val) => args.push(val),
+                        Err(e) => return Err(e.to_string()),
+                    },
+                    _ => return Err("invalid argument to $".to_string()),
+                }
             }
 
             Token::Escape(c) => {
@@ -147,7 +166,7 @@ fn build_command_node(cmd: String, tokens: &[Token], mut i: usize, ast: &mut Vec
         args,
     });
 
-    i
+    Ok(i)
 }
 
 fn expr(ast: &[Node]) -> Result<i32, String> {
