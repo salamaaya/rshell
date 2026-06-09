@@ -14,17 +14,14 @@ fn main() {
             .read_line(&mut input)
             .expect("Failed to read line");
 
-        let input = input.trim();
-        if input.is_empty() {
-            continue;
+        let lex_result = lex(&input.to_string());
+        match lex_result {
+            Err(e) => {
+                eprintln!("{e}");
+            }
+            Ok(tokens) => {
+                let _expr = parse(&tokens);
+            }
         }
-
-        let tokens = lex(&input.to_string()).expect("failed to lex");
-        let expr = parse(&tokens);
-
-        //let ret = run_cmd(&proc);
-        //if ret == 1 {
-        //    break;
-        //}
     }
 }

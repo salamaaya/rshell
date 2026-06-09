@@ -4,8 +4,6 @@
 pub enum Token {
     Id(String),
 
-    SingleQuote,
-    DoubleQuote,
     Semicolon,
     Dollar,
 
@@ -77,13 +75,49 @@ pub fn lex(input: &String) -> Result<Vec<Token>, String> {
             }
 
             '\'' => {
-                result.push(Token::SingleQuote);
+                let mut s = String::new();
+
                 it.next();
+                let mut ch = it.peek();
+                while let Some(&i) = ch {
+                    match i {
+                        '\'' => {
+                            it.next();
+                            break;
+                        }
+                        '\n' => return Err("unterminated single quote".to_string()),
+                        _ => {
+                            s.push(i);
+                            it.next();
+                            ch = it.peek();
+                        }
+                    }
+                }
+                result.push(Token::Id(s.clone()));
             }
+
             '\"' => {
-                result.push(Token::DoubleQuote);
+                let mut s = String::new();
+
                 it.next();
+                let mut ch = it.peek();
+                while let Some(&i) = ch {
+                    match i {
+                        '\"' => {
+                            it.next();
+                            break;
+                        }
+                        '\n' => return Err("unterminated double quote".to_string()),
+                        _ => {
+                            s.push(i);
+                            it.next();
+                            ch = it.peek();
+                        }
+                    }
+                }
+                result.push(Token::Id(s.clone()));
             }
+
             ';' => {
                 result.push(Token::Semicolon);
                 it.next();

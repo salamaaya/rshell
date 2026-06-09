@@ -41,9 +41,6 @@ fn build_ast(tokens: &Vec<Token>) -> Result<Vec<Node>, String> {
     let mut i = 0;
     let len = tokens.len();
     let mut ast = Vec::new();
-    //let mut mathching_parans = vec![];
-    //let mut mathching_singlequotes = vec![];
-    //let mut mathching_doublequotes = vec![];
 
     while i < len {
         let curr_tok = &tokens[i];
@@ -69,6 +66,7 @@ fn build_command_node(
 ) -> usize {
     let len = tokens.len();
     let mut args = vec![];
+
     i += 1;
 
     while i < len {
@@ -77,14 +75,6 @@ fn build_command_node(
         match curr_arg {
             Token::Id(arg) => args.push(arg.to_string()),
 
-            Token::SingleQuote => {
-                println!("TODO: '");
-                break;
-            }
-            Token::DoubleQuote => {
-                println!("TODO: \"");
-                break;
-            }
             Token::Semicolon => {
                 i += 1;
                 break;
