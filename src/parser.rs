@@ -31,13 +31,13 @@ pub enum Node {
     },
 }
 
-pub fn parse(tokens: &Vec<Token>) -> Result<i32, String> {
+pub fn parse(tokens: &[Token]) -> Result<i32, String> {
     let ast = build_ast(tokens)?;
     let expr = expr(&ast)?;
     Ok(expr)
 }
 
-fn build_ast(tokens: &Vec<Token>) -> Result<Vec<Node>, String> {
+fn build_ast(tokens: &[Token]) -> Result<Vec<Node>, String> {
     let mut i = 0;
     let len = tokens.len();
     let mut ast = Vec::new();
@@ -58,12 +58,7 @@ fn build_ast(tokens: &Vec<Token>) -> Result<Vec<Node>, String> {
     Ok(ast)
 }
 
-fn build_command_node(
-    cmd: String,
-    tokens: &Vec<Token>,
-    mut i: usize,
-    ast: &mut Vec<Node>,
-) -> usize {
+fn build_command_node(cmd: String, tokens: &[Token], mut i: usize, ast: &mut Vec<Node>) -> usize {
     let len = tokens.len();
     let mut args = vec![];
 
@@ -149,13 +144,13 @@ fn build_command_node(
 
     ast.push(Node::Command {
         program: cmd.to_string(),
-        args: args,
+        args,
     });
 
-    return i;
+    i
 }
 
-fn expr(ast: &Vec<Node>) -> Result<i32, String> {
+fn expr(ast: &[Node]) -> Result<i32, String> {
     let mut i = 0;
     let len = ast.len();
     let mut exit_code = 0;

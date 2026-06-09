@@ -26,7 +26,7 @@ pub enum Token {
     Or,
 }
 
-pub fn lex(input: &String) -> Result<Vec<Token>, String> {
+pub fn lex(input: &str) -> Result<Vec<Token>, String> {
     let mut result = Vec::new();
     let mut it = input.chars().peekable();
     let mut _lineno = 1;
@@ -56,7 +56,7 @@ pub fn lex(input: &String) -> Result<Vec<Token>, String> {
                 it.next();
                 let mut ch = it.peek();
                 while let Some(&i) = ch {
-                    if !i.is_digit(10) && !i.is_alphabetic() && !(i == '.') {
+                    if !i.is_ascii_digit() && !i.is_alphabetic() && (i != '.') {
                         ch = None;
                     } else {
                         s.push(i);
@@ -201,5 +201,5 @@ pub fn lex(input: &String) -> Result<Vec<Token>, String> {
         }
     }
 
-    return Ok(result);
+    Ok(result)
 }
