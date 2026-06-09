@@ -40,7 +40,7 @@ pub fn parse(tokens: &Vec<Token>) -> Result<i32, String> {
 fn build_ast(tokens: &Vec<Token>) -> Result<Vec<Node>, String> {
     let mut i = 0;
     let len = tokens.len();
-    let mut ast = vec![];
+    let mut ast = Vec::new();
     //let mut mathching_parans = vec![];
     //let mut mathching_singlequotes = vec![];
     //let mut mathching_doublequotes = vec![];
@@ -49,97 +49,7 @@ fn build_ast(tokens: &Vec<Token>) -> Result<Vec<Node>, String> {
         let curr_tok = &tokens[i];
         match curr_tok {
             Token::Id(cmd) => {
-                let mut args = vec![];
-                i += 1;
-                while i < len {
-                    let curr_arg = &tokens[i];
-                    match curr_arg {
-                        Token::Id(arg) => args.push(arg.to_string()),
-
-                        Token::SingleQuote => {
-                            println!("TODO: '");
-                            break;
-                        }
-                        Token::DoubleQuote => {
-                            println!("TODO: \"");
-                            break;
-                        }
-                        Token::Semicolon => {
-                            i += 1;
-                            break;
-                        }
-                        Token::Dollar => {
-                            println!("TODO: $");
-                            break;
-                        }
-
-                        Token::Escape(c) => {
-                            println!("TODO: \\{c}");
-                            break;
-                        }
-                        Token::Backslash => {
-                            println!("TODO: \\");
-                            break;
-                        }
-                        Token::Slash => {
-                            println!("TODO: /");
-                            break;
-                        }
-
-                        Token::LeftParen => {
-                            println!("TODO: (");
-                            break;
-                        }
-                        Token::RightParen => {
-                            println!("TODO: )");
-                            break;
-                        }
-                        Token::LeftCurlyBracket => {
-                            println!("TODO: {{");
-                            break;
-                        }
-                        Token::RightCurlyBracket => {
-                            println!("TODO: }}");
-                            break;
-                        }
-
-                        Token::Pipe => {
-                            println!("TODO: |");
-                            break;
-                        }
-                        Token::RedirectInput => {
-                            println!("TODO: <");
-                            break;
-                        }
-                        Token::RedirectOutput => {
-                            println!("TODO: >");
-                            break;
-                        }
-                        Token::RedirectOutputAppend => {
-                            println!("TODO: >>");
-                            break;
-                        }
-                        Token::Background => {
-                            println!("TODO: &");
-                            break;
-                        }
-
-                        Token::And => {
-                            println!("TODO: &&");
-                            break;
-                        }
-                        Token::Or => {
-                            println!("TODO: ||");
-                            break;
-                        }
-                    }
-                    i += 1;
-                }
-
-                ast.push(Node::Command {
-                    program: cmd.to_string(),
-                    args: args,
-                })
+                i = build_command_node(cmd.to_string(), tokens, i, &mut ast);
             }
 
             _ => print!("TODO"),
@@ -149,6 +59,110 @@ fn build_ast(tokens: &Vec<Token>) -> Result<Vec<Node>, String> {
     }
 
     Ok(ast)
+}
+
+fn build_command_node(
+    cmd: String,
+    tokens: &Vec<Token>,
+    mut i: usize,
+    ast: &mut Vec<Node>,
+) -> usize {
+    let len = tokens.len();
+    let mut args = vec![];
+    i += 1;
+
+    while i < len {
+        let curr_arg = &tokens[i];
+
+        match curr_arg {
+            Token::Id(arg) => args.push(arg.to_string()),
+
+            Token::SingleQuote => {
+                println!("TODO: '");
+                break;
+            }
+            Token::DoubleQuote => {
+                println!("TODO: \"");
+                break;
+            }
+            Token::Semicolon => {
+                i += 1;
+                break;
+            }
+            Token::Dollar => {
+                println!("TODO: $");
+                break;
+            }
+
+            Token::Escape(c) => {
+                println!("TODO: \\{c}");
+                break;
+            }
+            Token::Backslash => {
+                println!("TODO: \\");
+                break;
+            }
+            Token::Slash => {
+                println!("TODO: /");
+                break;
+            }
+
+            Token::LeftParen => {
+                println!("TODO: (");
+                break;
+            }
+            Token::RightParen => {
+                println!("TODO: )");
+                break;
+            }
+            Token::LeftCurlyBracket => {
+                println!("TODO: {{");
+                break;
+            }
+            Token::RightCurlyBracket => {
+                println!("TODO: }}");
+                break;
+            }
+
+            Token::Pipe => {
+                println!("TODO: |");
+                break;
+            }
+            Token::RedirectInput => {
+                println!("TODO: <");
+                break;
+            }
+            Token::RedirectOutput => {
+                println!("TODO: >");
+                break;
+            }
+            Token::RedirectOutputAppend => {
+                println!("TODO: >>");
+                break;
+            }
+            Token::Background => {
+                println!("TODO: &");
+                break;
+            }
+
+            Token::And => {
+                println!("TODO: &&");
+                break;
+            }
+            Token::Or => {
+                println!("TODO: ||");
+                break;
+            }
+        }
+        i += 1;
+    }
+
+    ast.push(Node::Command {
+        program: cmd.to_string(),
+        args: args,
+    });
+
+    return i;
 }
 
 fn expr(ast: &Vec<Node>) -> Result<i32, String> {
