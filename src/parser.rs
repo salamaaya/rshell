@@ -4,6 +4,7 @@ use crate::{
 };
 
 use std::env;
+use std::process::ExitStatus;
 
 pub enum Operator {
     Pipe,                 // |
@@ -37,10 +38,10 @@ pub enum Node {
     },
 }
 
-pub fn parse(tokens: &[Token]) -> Result<i32, String> {
+pub fn parse(tokens: &[Token]) -> Result<ExitStatus, String> {
     let ast = build_ast(tokens)?;
-    let expr = expr(&ast)?;
-    Ok(expr)
+    let exit_code = expr(&ast)?;
+    Ok(exit_code)
 }
 
 fn build_ast(tokens: &[Token]) -> Result<Vec<Node>, String> {
@@ -185,10 +186,10 @@ fn build_subshell_node(
     Ok(i)
 }
 
-fn expr(ast: &[Node]) -> Result<i32, String> {
+fn expr(ast: &[Node]) -> Result<ExitStatus, String> {
     let mut i = 0;
     let len = ast.len();
-    let mut exit_code = 0;
+    let mut exit_code = ExitStatus::default();
 
     while i < len {
         match &ast[i] {
@@ -197,7 +198,7 @@ fn expr(ast: &[Node]) -> Result<i32, String> {
                     cmd: program.to_string(),
                     args: args.to_vec(),
                 };
-                exit_code = run_cmd(&proc);
+                exit_code = run_cmd(&proc)?;
             }
 
             Node::Subshell { command } => {
@@ -209,7 +210,7 @@ fn expr(ast: &[Node]) -> Result<i32, String> {
                     cmd: "./target/debug/rshell".to_string(),
                     args: ["-c".to_string(), (&command).to_string()].to_vec(),
                 };
-                exit_code = run_cmd(&proc);
+                exit_code = run_cmd(&proc)?;
             }
 
             _ => println!("TODO: expr"),

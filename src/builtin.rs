@@ -16,10 +16,10 @@ pub fn is_builtin(cmd: &str) -> bool {
     false
 }
 
-pub fn run_builtin(out: &mut dyn io::Write, proc: &Process) -> i32 {
+pub fn run_builtin(out: &mut dyn io::Write, proc: &Process) {
     let cmd = &proc.cmd;
     if cmd == "exit" {
-        return 1;
+        return;
     } else if cmd == "cd" {
         chdir(proc);
     } else if cmd == "pwd" {
@@ -29,8 +29,6 @@ pub fn run_builtin(out: &mut dyn io::Write, proc: &Process) -> i32 {
     } else if cmd == "clear" {
         clear();
     }
-
-    0
 }
 
 fn get_home() -> Result<String, String> {

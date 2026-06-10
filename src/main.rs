@@ -43,7 +43,7 @@ fn handle_input(input: &mut String) {
             eprintln!("{e}");
         }
         Ok(tokens) => match parse(&tokens) {
-            Ok(_expr) => (),
+            Ok(_exit_code) => (),
             Err(e) => {
                 eprintln!("{e}");
             }
@@ -67,6 +67,10 @@ fn main() {
             .read_line(&mut input)
             .expect("Failed to read line");
 
-        handle_input(&mut input);
+        if input.trim() == "exit" {
+            return;
+        } else {
+            handle_input(&mut input);
+        }
     }
 }
