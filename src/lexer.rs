@@ -45,7 +45,7 @@ pub fn lex(input: &str) -> Result<Vec<Token>, String> {
                 it.next();
             }
 
-            'A'..='Z' | 'a'..='z' | '-' | '.' | '\\' | '/' => {
+            'A'..='Z' | 'a'..='z' | '0'..='9' | '-' | '.' | '\\' | '/' => {
                 let mut s = String::new();
                 let mut ch = it.peek();
                 while let Some(&i) = ch {
