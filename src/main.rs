@@ -42,9 +42,12 @@ fn handle_input(input: &mut String) {
         Err(e) => {
             eprintln!("{e}");
         }
-        Ok(tokens) => {
-            let _expr = parse(&tokens);
-        }
+        Ok(tokens) => match parse(&tokens) {
+            Ok(_expr) => (),
+            Err(e) => {
+                eprintln!("{e}");
+            }
+        },
     }
 }
 

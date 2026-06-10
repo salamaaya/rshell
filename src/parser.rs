@@ -20,6 +20,10 @@ pub enum Node {
         args: Vec<String>,
     },
 
+    Subshell {
+        command: String,
+    },
+
     Redirect {
         op: Operator,
         command: Box<Node>,
@@ -45,8 +49,7 @@ fn build_ast(tokens: &[Token]) -> Result<Vec<Node>, String> {
     let mut ast = Vec::new();
 
     while i < len {
-        let curr_tok = &tokens[i];
-        match curr_tok {
+        match &tokens[i] {
             Token::Id(cmd) => {
                 i = build_command_node(cmd.to_string(), tokens, i, &mut ast)?;
             }
@@ -55,10 +58,21 @@ fn build_ast(tokens: &[Token]) -> Result<Vec<Node>, String> {
                 i += 1;
             }
 
-            _ => print!("TODO"),
-        }
+            Token::LeftParen => {
+                i = build_subshell_node(tokens, i, &mut ast)?;
+            }
+            Token::RightParen => {
+                // error because LeftParen should match with ')'
+                // which moves the index to the token after its matching
+                // RightParen, meaning if a ')' is encountered, it's unmatched
+                return Err("parse error near ')'".to_string());
+            }
 
-        i += 1;
+            _ => {
+                println!("TODO: build_ast");
+                break;
+            }
+        }
     }
 
     Ok(ast)
@@ -71,19 +85,14 @@ fn build_command_node(
     ast: &mut Vec<Node>,
 ) -> Result<usize, String> {
     let len = tokens.len();
-    let mut args = vec![];
+    let mut args = Vec::new();
 
     i += 1;
 
     while i < len {
-        let mut curr_tok = &tokens[i];
-
-        match curr_tok {
+        match &tokens[i] {
             Token::Id(arg) => args.push(arg.to_string()),
 
-            Token::Semicolon => {
-                break;
-            }
             Token::Dollar => {
                 i += 1;
                 if i >= len {
@@ -91,8 +100,7 @@ fn build_command_node(
                     break;
                 }
 
-                curr_tok = &tokens[i];
-                match curr_tok {
+                match &tokens[i] {
                     Token::Id(key) => match env::var(key) {
                         Ok(val) => args.push(val),
                         Err(e) => return Err(e.to_string()),
@@ -101,53 +109,9 @@ fn build_command_node(
                 }
             }
 
-            Token::LeftParen => {
-                println!("TODO: (");
-                break;
-            }
-            Token::RightParen => {
-                println!("TODO: )");
-                break;
-            }
-            Token::LeftCurlyBracket => {
-                println!("TODO: {{");
-                break;
-            }
-            Token::RightCurlyBracket => {
-                println!("TODO: }}");
-                break;
-            }
-
-            Token::Pipe => {
-                println!("TODO: |");
-                break;
-            }
-            Token::RedirectInput => {
-                println!("TODO: <");
-                break;
-            }
-            Token::RedirectOutput => {
-                println!("TODO: >");
-                break;
-            }
-            Token::RedirectOutputAppend => {
-                println!("TODO: >>");
-                break;
-            }
-            Token::Background => {
-                println!("TODO: &");
-                break;
-            }
-
-            Token::And => {
-                println!("TODO: &&");
-                break;
-            }
-            Token::Or => {
-                println!("TODO: ||");
-                break;
-            }
+            _ => break,
         }
+
         i += 1;
     }
 
@@ -159,14 +123,75 @@ fn build_command_node(
     Ok(i)
 }
 
+fn build_subshell_node(
+    tokens: &[Token],
+    mut i: usize,
+    ast: &mut Vec<Node>,
+) -> Result<usize, String> {
+    let mut command = String::new();
+    let mut matching_parens = Vec::new();
+    let len = tokens.len();
+
+    matching_parens.push(Token::LeftParen);
+    i += 1;
+
+    while !matching_parens.is_empty() && i < len {
+        match &tokens[i] {
+            Token::Id(arg) => {
+                command.push_str(&arg);
+                command.push(' ');
+            }
+            Token::Semicolon => command.push(';'),
+            Token::Dollar => command.push('$'),
+            Token::LeftParen => {
+                command.push('(');
+                matching_parens.push(Token::LeftParen);
+            }
+            Token::RightParen => {
+                command.push(')');
+                matching_parens.pop();
+            }
+            Token::LeftCurlyBracket => command.push('{'),
+            Token::RightCurlyBracket => command.push('}'),
+            Token::Pipe => command.push('|'),
+            Token::RedirectInput => command.push('<'),
+            Token::RedirectOutput => command.push('>'),
+            Token::RedirectOutputAppend => {
+                command.push('>');
+                command.push('>');
+            }
+            Token::Background => command.push('&'),
+            Token::And => {
+                command.push('&');
+                command.push('&');
+            }
+            Token::Or => {
+                command.push('|');
+                command.push('|');
+            }
+        }
+
+        i += 1;
+    }
+
+    if i >= len && !matching_parens.is_empty() {
+        return Err("unmatched '('".to_string());
+    }
+
+    // remove the trailing ')'
+    command.pop();
+
+    ast.push(Node::Subshell { command: command });
+    Ok(i)
+}
+
 fn expr(ast: &[Node]) -> Result<i32, String> {
     let mut i = 0;
     let len = ast.len();
     let mut exit_code = 0;
 
     while i < len {
-        let curr_node = &ast[i];
-        match curr_node {
+        match &ast[i] {
             Node::Command { program, args } => {
                 let proc = Process {
                     cmd: program.to_string(),
@@ -175,7 +200,19 @@ fn expr(ast: &[Node]) -> Result<i32, String> {
                 exit_code = run_cmd(&proc);
             }
 
-            _ => print!("TODO"),
+            Node::Subshell { command } => {
+                let mut args = Vec::new();
+                args.push("-c");
+                args.push(command);
+
+                let proc = Process {
+                    cmd: "./target/debug/rshell".to_string(),
+                    args: ["-c".to_string(), (&command).to_string()].to_vec(),
+                };
+                exit_code = run_cmd(&proc);
+            }
+
+            _ => println!("TODO: expr"),
         }
 
         i += 1;
