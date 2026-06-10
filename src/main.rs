@@ -1,17 +1,20 @@
 use rshell::lexer::lex;
 use rshell::parser::parse;
 
+use clap::Parser;
+use clap_derive::Parser;
+
 use std::io;
 use std::io::Write;
 
-fn handle_input() {
-    let mut input = String::new();
+#[derive(Parser, Debug)]
+struct Args {
+    #[clap(short, long, default_value = "")]
+    command: String,
+}
 
+fn handle_input(input: &mut String) {
     loop {
-        io::stdin()
-            .read_line(&mut input)
-            .expect("Failed to read line");
-
         let mut input_cloned = input.clone();
         input_cloned = input_cloned.trim().to_string();
         if input_cloned.is_empty() {
@@ -26,7 +29,7 @@ fn handle_input() {
             }
 
             input_cloned.pop();
-            input = input_cloned;
+            *input = input_cloned;
             print!("> ");
             io::stdout().flush().unwrap();
         } else {
@@ -46,10 +49,21 @@ fn handle_input() {
 }
 
 fn main() {
+    let args = Args::parse();
+    if !args.command.is_empty() {
+        handle_input(&mut args.command.to_string());
+        return;
+    }
+
     loop {
         print!("rshell$ ");
         io::stdout().flush().unwrap();
 
-        handle_input();
+        let mut input = String::new();
+        io::stdin()
+            .read_line(&mut input)
+            .expect("Failed to read line");
+
+        handle_input(&mut input);
     }
 }

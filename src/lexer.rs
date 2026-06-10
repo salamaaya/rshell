@@ -54,6 +54,7 @@ pub fn lex(input: &str) -> Result<Vec<Token>, String> {
                         && (i != '-')
                         && (i != '.')
                         && (i != '\\')
+                        && (i != '/')
                     {
                         break;
                     } else if i == '\\' {
