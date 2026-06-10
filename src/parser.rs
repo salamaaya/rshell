@@ -51,6 +51,10 @@ fn build_ast(tokens: &[Token]) -> Result<Vec<Node>, String> {
                 i = build_command_node(cmd.to_string(), tokens, i, &mut ast)?;
             }
 
+            Token::Semicolon => {
+                i += 1;
+            }
+
             _ => print!("TODO"),
         }
 
@@ -72,13 +76,12 @@ fn build_command_node(
     i += 1;
 
     while i < len {
-        let mut curr_token = &tokens[i];
+        let mut curr_tok = &tokens[i];
 
-        match curr_token {
+        match curr_tok {
             Token::Id(arg) => args.push(arg.to_string()),
 
             Token::Semicolon => {
-                i += 1;
                 break;
             }
             Token::Dollar => {
@@ -88,8 +91,8 @@ fn build_command_node(
                     break;
                 }
 
-                curr_token = &tokens[i];
-                match curr_token {
+                curr_tok = &tokens[i];
+                match curr_tok {
                     Token::Id(key) => match env::var(key) {
                         Ok(val) => args.push(val),
                         Err(e) => return Err(e.to_string()),
