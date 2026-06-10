@@ -139,7 +139,7 @@ fn build_subshell_node(
     while !matching_parens.is_empty() && i < len {
         match &tokens[i] {
             Token::Id(arg) => {
-                command.push_str(&arg);
+                command.push_str(arg);
                 command.push(' ');
             }
             Token::Semicolon => command.push(';'),
@@ -182,7 +182,7 @@ fn build_subshell_node(
     // remove the trailing ')'
     command.pop();
 
-    ast.push(Node::Subshell { command: command });
+    ast.push(Node::Subshell { command });
     Ok(i)
 }
 
@@ -202,10 +202,6 @@ fn expr(ast: &[Node]) -> Result<ExitStatus, String> {
             }
 
             Node::Subshell { command } => {
-                let mut args = Vec::new();
-                args.push("-c");
-                args.push(command);
-
                 let proc = Process {
                     cmd: "./target/debug/rshell".to_string(),
                     args: ["-c".to_string(), (&command).to_string()].to_vec(),

@@ -19,7 +19,6 @@ pub fn is_builtin(cmd: &str) -> bool {
 pub fn run_builtin(out: &mut dyn io::Write, proc: &Process) {
     let cmd = &proc.cmd;
     if cmd == "exit" {
-        return;
     } else if cmd == "cd" {
         chdir(proc);
     } else if cmd == "pwd" {
