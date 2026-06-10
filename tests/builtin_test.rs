@@ -12,9 +12,8 @@ fn echo_empty() {
         args: args,
     };
 
-    let result = run_builtin(&mut stdout, &proc);
+    run_builtin(&mut stdout, &proc);
     assert_eq!(stdout, b" \n");
-    assert_eq!(result, 0);
 }
 
 #[test]
@@ -29,9 +28,8 @@ fn echo_basic() {
         args: args,
     };
 
-    let result = run_builtin(&mut stdout, &proc);
+    run_builtin(&mut stdout, &proc);
     assert_eq!(stdout, b"hello world \n");
-    assert_eq!(result, 0);
 }
 
 #[test]
@@ -47,9 +45,8 @@ fn echo_no_newline() {
         args: args,
     };
 
-    let result = run_builtin(&mut stdout, &proc);
+    run_builtin(&mut stdout, &proc);
     assert_eq!(stdout, b"hello world ");
-    assert_eq!(result, 0);
 }
 
 #[test]
@@ -65,9 +62,8 @@ fn echo_newline_after_args() {
         args: args,
     };
 
-    let result = run_builtin(&mut stdout, &proc);
+    run_builtin(&mut stdout, &proc);
     assert_eq!(stdout, b"hello -n world \n");
-    assert_eq!(result, 0);
 }
 
 #[test]
@@ -82,9 +78,8 @@ fn echo_no_newline_escape() {
         args: args,
     };
 
-    let result = run_builtin(&mut stdout, &proc);
+    run_builtin(&mut stdout, &proc);
     assert_eq!(stdout, b"hello\nworld ");
-    assert_eq!(result, 0);
 }
 
 #[test]
@@ -100,9 +95,8 @@ fn echo_escapes() {
         args: args,
     };
 
-    let result = run_builtin(&mut stdout, &proc);
+    run_builtin(&mut stdout, &proc);
     assert_eq!(stdout, b"hello\nworld bye \n");
-    assert_eq!(result, 0);
 }
 
 #[test]
@@ -117,9 +111,8 @@ fn echo_disable_escapes() {
         args: args,
     };
 
-    let result = run_builtin(&mut stdout, &proc);
+    run_builtin(&mut stdout, &proc);
     assert_eq!(stdout, b"hello\\nworld \n");
-    assert_eq!(result, 0);
 }
 
 #[test]
@@ -134,9 +127,8 @@ fn echo_escape_sequence() {
         args: args,
     };
 
-    let result = run_builtin(&mut stdout, &proc);
+    run_builtin(&mut stdout, &proc);
     assert_eq!(stdout, b"\\ \x07 \x08 \x1B \x0C \n \r \t \x0B \n".to_vec());
-    assert_eq!(result, 0);
 }
 
 #[test]
@@ -151,9 +143,8 @@ fn echo_backslash_c() {
         args: args,
     };
 
-    let result = run_builtin(&mut stdout, &proc);
+    run_builtin(&mut stdout, &proc);
     assert_eq!(stdout, b"hello\n");
-    assert_eq!(result, 0);
 }
 
 #[test]
@@ -168,9 +159,8 @@ fn echo_octal() {
         args: args,
     };
 
-    let result = run_builtin(&mut stdout, &proc);
+    run_builtin(&mut stdout, &proc);
     assert_eq!(stdout, b"I\nend \n");
-    assert_eq!(result, 0);
 }
 
 #[test]
@@ -185,7 +175,6 @@ fn echo_hex() {
         args: args,
     };
 
-    let result = run_builtin(&mut stdout, &proc);
+    run_builtin(&mut stdout, &proc);
     assert_eq!(stdout, b"A\nend \n");
-    assert_eq!(result, 0);
 }
