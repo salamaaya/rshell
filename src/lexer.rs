@@ -45,12 +45,13 @@ pub fn lex(input: &str) -> Result<Vec<Token>, String> {
                 it.next();
             }
 
-            'A'..='Z' | 'a'..='z' | '0'..='9' | '-' | '.' | '\\' | '/' => {
+            'A'..='Z' | 'a'..='z' | '0'..='9' | '_' | '-' | '.' | '\\' | '/' => {
                 let mut s = String::new();
                 let mut ch = it.peek();
                 while let Some(&i) = ch {
                     if !i.is_ascii_digit()
                         && !i.is_alphabetic()
+                        && (i != '_')
                         && (i != '-')
                         && (i != '.')
                         && (i != '\\')
