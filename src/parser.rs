@@ -6,6 +6,7 @@ use crate::{
 use std::env;
 use std::process::ExitStatus;
 
+#[derive(Debug, Clone)]
 pub enum Operator {
     Pipe,                 // |
     RedirectInput,        // <
@@ -15,6 +16,7 @@ pub enum Operator {
     Or,                   // ||
 }
 
+#[derive(Debug, Clone)]
 pub enum Node {
     Command {
         program: String,
@@ -44,7 +46,7 @@ pub fn parse(tokens: &[Token]) -> Result<ExitStatus, String> {
     Ok(exit_code)
 }
 
-fn build_ast(tokens: &[Token]) -> Result<Vec<Node>, String> {
+pub fn build_ast(tokens: &[Token]) -> Result<Vec<Node>, String> {
     let mut i = 0;
     let len = tokens.len();
     let mut ast = Vec::new();
