@@ -19,12 +19,12 @@ pub enum Operator {
 #[derive(Debug, Clone)]
 pub enum Node {
     Command {
-        program: String,
+        cmd: String,
         args: Vec<String>,
     },
 
     Subshell {
-        command: String,
+        cmd: String,
     },
 
     Redirect {
@@ -65,6 +65,16 @@ pub fn build_ast(tokens: &[Token]) -> Result<Vec<Node>, String> {
                 i = build_subshell_node(tokens, i, &mut ast)?;
             }
             Token::RightParen => {
+                // error because LeftParen should match with ')'
+                // which moves the index to the token after its matching
+                // RightParen, meaning if a ')' is encountered, it's unmatched
+                return Err("parse error near ')'".to_string());
+            }
+
+            Token::LeftCurlyBracket => {
+                i = build_inline_node(tokens, i, &mut ast)?;
+            }
+            Token::RightCurlyBracket => {
                 // error because LeftParen should match with ')'
                 // which moves the index to the token after its matching
                 // RightParen, meaning if a ')' is encountered, it's unmatched
@@ -119,7 +129,7 @@ fn build_command_node(
     }
 
     ast.push(Node::Command {
-        program: cmd.to_string(),
+        cmd: cmd.to_string(),
         args,
     });
 
@@ -184,7 +194,52 @@ fn build_subshell_node(
     // remove the trailing ')'
     command.pop();
 
-    ast.push(Node::Subshell { command });
+    ast.push(Node::Subshell { cmd: command });
+    Ok(i)
+}
+
+fn build_inline_node(tokens: &[Token], mut i: usize, ast: &mut Vec<Node>) -> Result<usize, String> {
+    let mut matching_curly_brackets = Vec::new();
+    let len = tokens.len();
+
+    matching_curly_brackets.push(Token::LeftCurlyBracket);
+    i += 1;
+
+    while !matching_curly_brackets.is_empty() && i < len {
+        match &tokens[i] {
+            Token::Id(cmd) => {
+                i = build_command_node(cmd.to_string(), tokens, i, ast)?;
+            }
+
+            Token::Semicolon => {
+                i += 1;
+            }
+
+            Token::LeftParen => {
+                i = build_subshell_node(tokens, i, ast)?;
+            }
+            Token::RightParen => {
+                return Err("parse error near ')'".to_string());
+            }
+            Token::LeftCurlyBracket => {
+                matching_curly_brackets.push(Token::LeftCurlyBracket);
+                i += 1;
+            }
+            Token::RightCurlyBracket => {
+                matching_curly_brackets.pop();
+                i += 1;
+            }
+
+            _ => {
+                print!("TODO: build_inline_node");
+            }
+        }
+    }
+
+    if i >= len && !matching_curly_brackets.is_empty() {
+        return Err("unmatched '{'".to_string());
+    }
+
     Ok(i)
 }
 
@@ -195,7 +250,7 @@ fn expr(ast: &[Node]) -> Result<ExitStatus, String> {
 
     while i < len {
         match &ast[i] {
-            Node::Command { program, args } => {
+            Node::Command { cmd: program, args } => {
                 let proc = Process {
                     cmd: program.to_string(),
                     args: args.to_vec(),
@@ -203,7 +258,7 @@ fn expr(ast: &[Node]) -> Result<ExitStatus, String> {
                 exit_code = run_cmd(&proc)?;
             }
 
-            Node::Subshell { command } => {
+            Node::Subshell { cmd: command } => {
                 let proc = Process {
                     cmd: "./target/debug/rshell".to_string(),
                     args: ["-c".to_string(), (&command).to_string()].to_vec(),
