@@ -10,7 +10,7 @@ fn single_command_ast() {
 
     let output = format!("{:?}", ast);
 
-    assert_eq!(r#"[Command { program: "ls", args: [] }]"#, output);
+    assert_eq!(r#"[Command { cmd: "ls", args: [] }]"#, output);
 }
 
 #[test]
@@ -23,7 +23,7 @@ fn command_with_args_ast() {
     let output = format!("{:?}", ast);
 
     assert_eq!(
-        r#"[Command { program: "echo", args: ["hello", "world"] }]"#,
+        r#"[Command { cmd: "echo", args: ["hello", "world"] }]"#,
         output
     );
 }
@@ -38,7 +38,7 @@ fn multiple_commands_ast() {
     let output = format!("{:?}", ast);
 
     assert_eq!(
-        r#"[Command { program: "pwd", args: [] }, Command { program: "ls", args: [] }]"#,
+        r#"[Command { cmd: "pwd", args: [] }, Command { cmd: "ls", args: [] }]"#,
         output
     );
 }
@@ -66,7 +66,7 @@ fn env_var_expansion_ast() {
 
     let output = format!("{:?}", ast);
 
-    assert_eq!(r#"[Command { program: "echo", args: ["hello"] }]"#, output);
+    assert_eq!(r#"[Command { cmd: "echo", args: ["hello"] }]"#, output);
 }
 
 #[test]
@@ -83,7 +83,7 @@ fn env_var_middle_of_args_ast() {
     let output = format!("{:?}", ast);
 
     assert_eq!(
-        r#"[Command { program: "echo", args: ["before", "hello", "after"] }]"#,
+        r#"[Command { cmd: "echo", args: ["before", "hello", "after"] }]"#,
         output
     );
 }
@@ -110,7 +110,7 @@ fn lone_dollar_ast() {
 
     let output = format!("{:?}", ast);
 
-    assert_eq!(r#"[Command { program: "echo", args: ["$"] }]"#, output);
+    assert_eq!(r#"[Command { cmd: "echo", args: ["$"] }]"#, output);
 }
 
 #[test]
@@ -131,7 +131,7 @@ fn simple_subshell_ast() {
 
     let output = format!("{:?}", ast);
 
-    assert_eq!(r#"[Subshell { command: "ls " }]"#, output);
+    assert_eq!(r#"[Subshell { cmd: "ls " }]"#, output);
 }
 
 #[test]
@@ -180,5 +180,5 @@ fn empty_subshell_ast() {
 
     let output = format!("{:?}", ast);
 
-    assert_eq!(r#"[Subshell { command: "" }]"#, output);
+    assert_eq!(r#"[Subshell { cmd: "" }]"#, output);
 }
