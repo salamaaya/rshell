@@ -29,8 +29,9 @@ pub enum Node {
 
     Redirect {
         op: Operator,
-        command: Box<Node>,
-        file: String,
+        cmd: Vec<Node>,
+        stdin: String,
+        stdout: String,
     },
 
     Binary {
@@ -49,7 +50,7 @@ pub fn parse(tokens: &[Token]) -> Result<ExitStatus, String> {
 pub fn build_ast(tokens: &[Token]) -> Result<Vec<Node>, String> {
     let mut i = 0;
     let len = tokens.len();
-    let mut ast = Vec::new();
+    let mut ast: Vec<Node> = Vec::new();
 
     while i < len {
         match &tokens[i] {
@@ -75,10 +76,14 @@ pub fn build_ast(tokens: &[Token]) -> Result<Vec<Node>, String> {
                 i = build_inline_node(tokens, i, &mut ast)?;
             }
             Token::RightCurlyBracket => {
-                // error because LeftParen should match with ')'
+                // error because LeftCurlyBracket should match with '}'
                 // which moves the index to the token after its matching
-                // RightParen, meaning if a ')' is encountered, it's unmatched
+                // RightCurlyBracket, meaning if a '}' is encountered, it's unmatched
                 return Err("parse error near ')'".to_string());
+            }
+
+            Token::Pipe => {
+                i = build_pipe_node(tokens, i, &mut ast)?;
             }
 
             _ => {
@@ -238,6 +243,43 @@ fn build_inline_node(tokens: &[Token], mut i: usize, ast: &mut Vec<Node>) -> Res
 
     if i >= len && !matching_curly_brackets.is_empty() {
         return Err("unmatched '{'".to_string());
+    }
+
+    Ok(i)
+}
+
+fn build_pipe_node(tokens: &[Token], mut i: usize, ast: &mut Vec<Node>) -> Result<usize, String> {
+    i += 1;
+    match &tokens[i] {
+        Token::Id(cmd) => {
+            let cmd1 = match ast.pop() {
+                Some(Node::Command { cmd, args }) => Node::Command { cmd, args },
+                _ => {
+                    return Err("parse error, invalid pipe".to_string());
+                }
+            };
+
+            i = build_command_node(cmd.to_string(), tokens, i, ast)?;
+
+            let cmd2 = match ast.pop() {
+                Some(Node::Command { cmd, args }) => Node::Command { cmd, args },
+                _ => {
+                    return Err("parse error, invalid pipe".to_string());
+                }
+            };
+
+            let commands = [cmd1, cmd2];
+            ast.push(Node::Redirect {
+                op: Operator::Pipe,
+                cmd: commands.to_vec(),
+                stdin: "stdout".to_string(),
+                stdout: "stdin".to_string(),
+            });
+        }
+
+        _ => {
+            println!("TODO: build_pipe_node");
+        }
     }
 
     Ok(i)
