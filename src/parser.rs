@@ -1,3 +1,5 @@
+use clap::error::Result;
+
 use crate::{
     lexer::Token,
     process::{Process, run_cmd},
@@ -25,6 +27,10 @@ pub enum Node {
 
     Subshell {
         cmd: String,
+    },
+
+    InlineGroup {
+        cmds: Vec<Node>,
     },
 
     Redirect {
@@ -79,7 +85,7 @@ pub fn build_ast(tokens: &[Token]) -> Result<Vec<Node>, String> {
                 // error because LeftCurlyBracket should match with '}'
                 // which moves the index to the token after its matching
                 // RightCurlyBracket, meaning if a '}' is encountered, it's unmatched
-                return Err("parse error near ')'".to_string());
+                return Err("parse error near '}'".to_string());
             }
 
             Token::Pipe => {
@@ -203,17 +209,27 @@ fn build_subshell_node(
     Ok(i)
 }
 
-fn build_inline_node(tokens: &[Token], mut i: usize, ast: &mut Vec<Node>) -> Result<usize, String> {
-    let mut matching_curly_brackets = Vec::new();
+fn build_inline_node(tokens: &[Token], i: usize, ast: &mut Vec<Node>) -> Result<usize, String> {
+    return build_inline_node_recurse(tokens, i, ast, &mut Vec::new());
+}
+
+fn build_inline_node_recurse(
+    tokens: &[Token],
+    mut i: usize,
+    ast: &mut Vec<Node>,
+    inline_nodes: &mut Vec<Node>,
+) -> Result<usize, String> {
+    let mut matching_curly_brackets = false;
     let len = tokens.len();
 
-    matching_curly_brackets.push(Token::LeftCurlyBracket);
     i += 1;
 
-    while !matching_curly_brackets.is_empty() && i < len {
+    while !matching_curly_brackets && i < len {
         match &tokens[i] {
             Token::Id(cmd) => {
                 i = build_command_node(cmd.to_string(), tokens, i, ast)?;
+                let command = get_last_command(ast)?;
+                inline_nodes.push(command);
             }
 
             Token::Semicolon => {
@@ -222,17 +238,21 @@ fn build_inline_node(tokens: &[Token], mut i: usize, ast: &mut Vec<Node>) -> Res
 
             Token::LeftParen => {
                 i = build_subshell_node(tokens, i, ast)?;
+                let subshell = get_last_subshell(ast)?;
+                inline_nodes.push(subshell);
             }
             Token::RightParen => {
                 return Err("parse error near ')'".to_string());
             }
             Token::LeftCurlyBracket => {
-                matching_curly_brackets.push(Token::LeftCurlyBracket);
-                i += 1;
+                i = build_inline_node_recurse(tokens, i, ast, &mut Vec::new())?;
+                let inline_group = get_last_inline(ast)?;
+                inline_nodes.push(inline_group);
             }
             Token::RightCurlyBracket => {
-                matching_curly_brackets.pop();
+                matching_curly_brackets = true;
                 i += 1;
+                break;
             }
 
             _ => {
@@ -241,10 +261,13 @@ fn build_inline_node(tokens: &[Token], mut i: usize, ast: &mut Vec<Node>) -> Res
         }
     }
 
-    if i >= len && !matching_curly_brackets.is_empty() {
+    if !matching_curly_brackets {
         return Err("unmatched '{'".to_string());
     }
 
+    ast.push(Node::InlineGroup {
+        cmds: inline_nodes.to_vec(),
+    });
     Ok(i)
 }
 
@@ -252,21 +275,9 @@ fn build_pipe_node(tokens: &[Token], mut i: usize, ast: &mut Vec<Node>) -> Resul
     i += 1;
     match &tokens[i] {
         Token::Id(cmd) => {
-            let cmd1 = match ast.pop() {
-                Some(Node::Command { cmd, args }) => Node::Command { cmd, args },
-                _ => {
-                    return Err("parse error, invalid pipe".to_string());
-                }
-            };
-
+            let cmd1 = get_last_command(ast)?;
             i = build_command_node(cmd.to_string(), tokens, i, ast)?;
-
-            let cmd2 = match ast.pop() {
-                Some(Node::Command { cmd, args }) => Node::Command { cmd, args },
-                _ => {
-                    return Err("parse error, invalid pipe".to_string());
-                }
-            };
+            let cmd2 = get_last_command(ast)?;
 
             let commands = [cmd1, cmd2];
             ast.push(Node::Redirect {
@@ -308,6 +319,10 @@ fn expr(ast: &[Node]) -> Result<ExitStatus, String> {
                 exit_code = run_cmd(&proc)?;
             }
 
+            Node::InlineGroup { cmds: commands } => {
+                expr(commands)?;
+            }
+
             _ => println!("TODO: expr"),
         }
 
@@ -315,4 +330,31 @@ fn expr(ast: &[Node]) -> Result<ExitStatus, String> {
     }
 
     Ok(exit_code)
+}
+
+fn get_last_command(ast: &mut Vec<Node>) -> Result<Node, String> {
+    match ast.pop() {
+        Some(Node::Command { cmd, args }) => return Ok(Node::Command { cmd, args }),
+        _ => {
+            return Err("parse error, invalid command".to_string());
+        }
+    };
+}
+
+fn get_last_subshell(ast: &mut Vec<Node>) -> Result<Node, String> {
+    match ast.pop() {
+        Some(Node::Subshell { cmd }) => return Ok(Node::Subshell { cmd }),
+        _ => {
+            return Err("parse error, invalid subshell".to_string());
+        }
+    };
+}
+
+fn get_last_inline(ast: &mut Vec<Node>) -> Result<Node, String> {
+    match ast.pop() {
+        Some(Node::InlineGroup { cmds }) => return Ok(Node::InlineGroup { cmds }),
+        _ => {
+            return Err("parse error, invalid inline group".to_string());
+        }
+    };
 }
