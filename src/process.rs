@@ -10,11 +10,6 @@ pub struct Process {
     pub args: Vec<String>,
 }
 
-/*
- * possible return values:
- *   1: exit
- *   0: continue
- */
 pub fn run_cmd(proc: &Process) -> Result<ExitStatus, String> {
     if is_builtin(proc.cmd.as_str()) {
         run_builtin(&mut io::stdout(), proc);
