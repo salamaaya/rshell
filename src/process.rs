@@ -25,25 +25,44 @@ pub fn run_cmd(proc: &Process) -> Result<ExitStatus, String> {
     Ok(result)
 }
 
-pub fn run_cmd_pipe(proc1: &Process, proc2: &Process) -> Result<ExitStatus, String> {
-    let (reader, writer) = pipe().map_err(|e| e.to_string())?;
+pub fn run_cmd_pipe(procs: &[Process]) -> Result<ExitStatus, String> {
+    let num_procs = procs.len();
+    let mut pipes = Vec::new();
+    let mut children = Vec::new();
+    let mut result = ExitStatus::default();
 
-    let mut cmd1 = Command::new(&proc1.cmd);
-    cmd1.args(&proc1.args);
-    cmd1.stdout(Stdio::from(writer));
+    for _ in 0..num_procs - 1 {
+        pipes.push(pipe().map_err(|e| e.to_string())?);
+    }
 
-    let mut cmd2 = Command::new(&proc2.cmd);
-    cmd2.args(&proc2.args);
-    cmd2.stdin(Stdio::from(reader));
-    cmd2.stdout(Stdio::inherit());
+    for i in 0..num_procs {
+        let stdin = if i == 0 {
+            Stdio::inherit()
+        } else {
+            Stdio::from(pipes[i - 1].0.try_clone().map_err(|e| e.to_string())?)
+        };
 
-    let mut child1 = cmd1.spawn().map_err(|e| e.to_string())?;
-    let mut child2 = cmd2.spawn().map_err(|e| e.to_string())?;
+        let stdout = if i == num_procs - 1 {
+            Stdio::inherit()
+        } else {
+            Stdio::from(pipes[i].1.try_clone().map_err(|e| e.to_string())?)
+        };
 
-    drop(cmd1);
-    drop(cmd2);
+        let child = Command::new(&procs[i].cmd)
+            .args(&procs[i].args)
+            .stdin(stdin)
+            .stdout(stdout)
+            .spawn()
+            .map_err(|e| e.to_string())?;
 
-    let status2 = child2.wait().map_err(|e| e.to_string())?;
-    let _ = child1.wait().map_err(|e| e.to_string())?;
-    Ok(status2)
+        children.push(child);
+    }
+
+    drop(pipes);
+
+    for mut child in children {
+        result = child.wait().map_err(|e| e.to_string())?;
+    }
+
+    Ok(result)
 }

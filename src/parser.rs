@@ -270,24 +270,36 @@ fn build_inline_node_recurse(
 }
 
 fn build_pipe_node(tokens: &[Token], mut i: usize, ast: &mut Vec<Node>) -> Result<usize, String> {
+    let mut commands = Vec::new();
+    let len = tokens.len();
+
     i += 1;
-    match &tokens[i] {
-        Token::Id(cmd) => {
-            let cmd1 = get_last_command(ast)?;
-            i = build_command_node(cmd.to_string(), tokens, i, ast)?;
-            let cmd2 = get_last_command(ast)?;
 
-            let commands = [cmd1, cmd2];
-            ast.push(Node::Redirect {
-                op: Operator::Pipe,
-                cmds: commands.to_vec(),
-            });
-        }
+    while i < len {
+        match &tokens[i] {
+            Token::Id(cmd) => {
+                let curr_cmd = get_last_command(ast)?;
+                i = build_command_node(cmd.to_string(), tokens, i, ast)?;
+                commands.push(curr_cmd);
+            }
 
-        _ => {
-            println!("TODO: build_pipe_node");
+            Token::Pipe => {
+                i += 1;
+            }
+
+            _ => {
+                println!("TODO: build_pipe_node");
+                break;
+            }
         }
     }
+
+    let last_cmd = get_last_command(ast)?;
+    commands.push(last_cmd);
+    ast.push(Node::Redirect {
+        op: Operator::Pipe,
+        cmds: commands.to_vec(),
+    });
 
     Ok(i)
 }
@@ -323,26 +335,20 @@ fn expr(ast: &[Node]) -> Result<ExitStatus, String> {
                 op: Operator::Pipe,
                 cmds,
             } => {
-                let proc1 = match &cmds[0] {
-                    Node::Command { cmd, args } => Process {
-                        cmd: cmd.to_string(),
-                        args: args.to_vec(),
-                    },
-                    _ => {
-                        return Err("invalid pipe".to_string());
-                    }
-                };
-                let proc2 = match &cmds[1] {
-                    Node::Command { cmd, args } => Process {
-                        cmd: cmd.to_string(),
-                        args: args.to_vec(),
-                    },
-                    _ => {
-                        return Err("invalid pipe".to_string());
-                    }
-                };
-
-                run_cmd_pipe(&proc1, &proc2)?;
+                let mut procs = Vec::new();
+                for c in cmds {
+                    let proc = match c {
+                        Node::Command { cmd, args } => Process {
+                            cmd: cmd.to_string(),
+                            args: args.to_vec(),
+                        },
+                        _ => {
+                            return Err("invalid pipe".to_string());
+                        }
+                    };
+                    procs.push(proc);
+                }
+                exit_code = run_cmd_pipe(&procs)?;
             }
 
             _ => println!("TODO: expr"),
