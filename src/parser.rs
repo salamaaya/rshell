@@ -2,7 +2,7 @@ use clap::error::Result;
 
 use crate::{
     lexer::Token,
-    process::{Process, run_cmd},
+    process::{Process, run_cmd, run_cmd_pipe},
 };
 
 use std::env;
@@ -35,9 +35,7 @@ pub enum Node {
 
     Redirect {
         op: Operator,
-        cmd: Vec<Node>,
-        stdin: String,
-        stdout: String,
+        cmds: Vec<Node>,
     },
 
     Binary {
@@ -282,9 +280,7 @@ fn build_pipe_node(tokens: &[Token], mut i: usize, ast: &mut Vec<Node>) -> Resul
             let commands = [cmd1, cmd2];
             ast.push(Node::Redirect {
                 op: Operator::Pipe,
-                cmd: commands.to_vec(),
-                stdin: "stdout".to_string(),
-                stdout: "stdin".to_string(),
+                cmds: commands.to_vec(),
             });
         }
 
@@ -303,24 +299,50 @@ fn expr(ast: &[Node]) -> Result<ExitStatus, String> {
 
     while i < len {
         match &ast[i] {
-            Node::Command { cmd: program, args } => {
+            Node::Command { cmd, args } => {
                 let proc = Process {
-                    cmd: program.to_string(),
+                    cmd: cmd.to_string(),
                     args: args.to_vec(),
                 };
                 exit_code = run_cmd(&proc)?;
             }
 
-            Node::Subshell { cmd: command } => {
+            Node::Subshell { cmd } => {
                 let proc = Process {
                     cmd: "./target/debug/rshell".to_string(),
-                    args: ["-c".to_string(), (&command).to_string()].to_vec(),
+                    args: ["-c".to_string(), (&cmd).to_string()].to_vec(),
                 };
                 exit_code = run_cmd(&proc)?;
             }
 
-            Node::InlineGroup { cmds: commands } => {
-                expr(commands)?;
+            Node::InlineGroup { cmds } => {
+                expr(cmds)?;
+            }
+
+            Node::Redirect {
+                op: Operator::Pipe,
+                cmds,
+            } => {
+                let proc1 = match &cmds[0] {
+                    Node::Command { cmd, args } => Process {
+                        cmd: cmd.to_string(),
+                        args: args.to_vec(),
+                    },
+                    _ => {
+                        return Err("invalid pipe".to_string());
+                    }
+                };
+                let proc2 = match &cmds[1] {
+                    Node::Command { cmd, args } => Process {
+                        cmd: cmd.to_string(),
+                        args: args.to_vec(),
+                    },
+                    _ => {
+                        return Err("invalid pipe".to_string());
+                    }
+                };
+
+                run_cmd_pipe(&proc1, &proc2)?;
             }
 
             _ => println!("TODO: expr"),
