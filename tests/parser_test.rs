@@ -315,3 +315,293 @@ fn subshell_containing_inline_group_ast() {
 
     assert!(build_ast(&tokens).is_ok());
 }
+
+#[test]
+fn multiple_pipes_ast() {
+    let input = String::from("a | b | c | d");
+
+    let tokens = lex(&input).unwrap();
+
+    assert!(build_ast(&tokens).is_ok());
+}
+
+#[test]
+fn pipe_followed_by_command_ast() {
+    let input = String::from("ls | wc; pwd");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    assert_eq!(2, ast.len());
+}
+
+#[test]
+fn command_before_pipe_ast() {
+    let input = String::from("pwd; ls | wc");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    assert_eq!(2, ast.len());
+}
+
+#[test]
+fn undefined_env_var_inside_pipe_error() {
+    unsafe {
+        std::env::remove_var("DOES_NOT_EXIST");
+    }
+
+    let input = String::from("echo $DOES_NOT_EXIST | wc");
+
+    let tokens = lex(&input).unwrap();
+
+    assert!(build_ast(&tokens).is_err());
+}
+
+#[test]
+fn subshell_in_middle_of_pipe_ast() {
+    let input = String::from("echo hi | (cat) | wc");
+
+    let tokens = lex(&input).unwrap();
+
+    assert!(build_ast(&tokens).is_ok());
+}
+
+#[test]
+fn inline_group_in_middle_of_pipe_ast() {
+    let input = String::from("echo hi | {cat} | wc");
+
+    let tokens = lex(&input).unwrap();
+
+    assert!(build_ast(&tokens).is_ok());
+}
+
+#[test]
+fn pipe_inside_subshell_ast() {
+    let input = String::from("(ls | wc)");
+
+    let tokens = lex(&input).unwrap();
+
+    assert!(build_ast(&tokens).is_ok());
+}
+
+#[test]
+fn deeply_nested_pipe_ast() {
+    let input = String::from("({{ls | grep rs}}) | {wc}");
+
+    let tokens = lex(&input).unwrap();
+
+    assert!(build_ast(&tokens).is_ok());
+}
+
+#[test]
+fn leading_pipe_error() {
+    let input = String::from("| ls");
+
+    let tokens = lex(&input).unwrap();
+
+    assert!(build_ast(&tokens).is_err());
+}
+
+#[test]
+fn trailing_pipe_error() {
+    let input = String::from("ls |");
+
+    let tokens = lex(&input).unwrap();
+
+    assert!(build_ast(&tokens).is_err());
+}
+
+#[test]
+fn empty_pipe_segment_error() {
+    let input = String::from("ls | | wc");
+
+    let tokens = lex(&input).unwrap();
+
+    assert!(build_ast(&tokens).is_err());
+}
+
+#[test]
+fn pipe_with_empty_subshell_ast() {
+    let input = String::from("() | wc");
+
+    let tokens = lex(&input).unwrap();
+
+    assert!(build_ast(&tokens).is_ok());
+}
+
+#[test]
+fn pipe_with_empty_inline_group_ast() {
+    let input = String::from("{} | wc");
+
+    let tokens = lex(&input).unwrap();
+
+    assert!(build_ast(&tokens).is_ok());
+}
+
+#[test]
+fn semicolon_inside_pipe_segment_error() {
+    let input = String::from("ls; pwd | wc");
+
+    let tokens = lex(&input).unwrap();
+
+    assert!(build_ast(&tokens).is_ok());
+}
+
+#[test]
+fn simple_pipe_ast() {
+    let input = String::from("ls | wc");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: Pipe, cmds: [Command { cmd: "ls", args: [] }, Command { cmd: "wc", args: [] }] }]"#,
+        output
+    );
+}
+
+#[test]
+fn pipe_with_arguments_ast() {
+    let input = String::from("echo hello | grep hello");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: Pipe, cmds: [Command { cmd: "echo", args: ["hello"] }, Command { cmd: "grep", args: ["hello"] }] }]"#,
+        output
+    );
+}
+
+#[test]
+fn three_command_pipe_ast() {
+    let input = String::from("cat file | grep test | wc");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: Pipe, cmds: [Command { cmd: "cat", args: ["file"] }, Command { cmd: "grep", args: ["test"] }, Command { cmd: "wc", args: [] }] }]"#,
+        output
+    );
+}
+
+#[test]
+fn env_var_inside_pipe_ast() {
+    unsafe {
+        std::env::set_var("TEST_VAR", "hello");
+    }
+
+    let input = String::from("echo $TEST_VAR | wc");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: Pipe, cmds: [Command { cmd: "echo", args: ["hello"] }, Command { cmd: "wc", args: [] }] }]"#,
+        output
+    );
+}
+
+#[test]
+fn subshell_on_left_side_of_pipe_ast() {
+    let input = String::from("(ls) | wc");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: Pipe, cmds: [Subshell { cmd: "ls " }, Command { cmd: "wc", args: [] }] }]"#,
+        output
+    );
+}
+
+#[test]
+fn subshell_on_right_side_of_pipe_ast() {
+    let input = String::from("ls | (wc)");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: Pipe, cmds: [Command { cmd: "ls", args: [] }, Subshell { cmd: "wc " }] }]"#,
+        output
+    );
+}
+
+#[test]
+fn inline_group_on_left_side_of_pipe_ast() {
+    let input = String::from("{ls} | wc");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: Pipe, cmds: [InlineGroup { cmds: [Command { cmd: "ls", args: [] }] }, Command { cmd: "wc", args: [] }] }]"#,
+        output
+    );
+}
+
+#[test]
+fn inline_group_on_right_side_of_pipe_ast() {
+    let input = String::from("ls | {wc}");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: Pipe, cmds: [Command { cmd: "ls", args: [] }, InlineGroup { cmds: [Command { cmd: "wc", args: [] }] }] }]"#,
+        output
+    );
+}
+
+#[test]
+fn pipe_inside_inline_group_ast() {
+    let input = String::from("{ls | wc}");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[InlineGroup { cmds: [Redirect { op: Pipe, cmds: [Command { cmd: "ls", args: [] }, Command { cmd: "wc", args: [] }] }] }]"#,
+        output
+    );
+}
+
+#[test]
+fn nested_pipe_group_subshell_ast() {
+    unsafe {
+        std::env::set_var("TEST_VAR", "hello");
+    }
+
+    let input = String::from("{echo $TEST_VAR | (cat)} | wc");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: Pipe, cmds: [InlineGroup { cmds: [Redirect { op: Pipe, cmds: [Command { cmd: "echo", args: ["hello"] }, Subshell { cmd: "cat " }] }] }, Command { cmd: "wc", args: [] }] }]"#,
+        output
+    );
+}
