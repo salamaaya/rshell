@@ -253,6 +253,13 @@ fn build_inline_node_recurse(
                 break;
             }
 
+            Token::Pipe => {
+                ast.push(inline_nodes.pop().unwrap());
+                i = build_pipe_node(tokens, i, ast)?;
+                let pipe = pop_pipe(ast)?;
+                inline_nodes.push(pipe);
+            }
+
             _ => {
                 print!("TODO: build_inline_node");
             }
@@ -305,7 +312,8 @@ fn build_pipe_node(tokens: &[Token], mut i: usize, ast: &mut Vec<Node>) -> Resul
                 commands.push(inline);
             }
             Token::RightCurlyBracket => {
-                return Err("parse error near '}'".to_string());
+                // break instead of error because pipe could be inside of inline group
+                break;
             }
 
             Token::Pipe => {
@@ -409,6 +417,19 @@ fn pop_inline(ast: &mut Vec<Node>) -> Result<Node, String> {
     match ast.pop() {
         Some(Node::InlineGroup { cmds }) => Ok(Node::InlineGroup { cmds }),
         _ => Err("parse error, invalid inline group".to_string()),
+    }
+}
+
+fn pop_pipe(ast: &mut Vec<Node>) -> Result<Node, String> {
+    match ast.pop() {
+        Some(Node::Redirect {
+            op: Operator::Pipe,
+            cmds,
+        }) => Ok(Node::Redirect {
+            op: Operator::Pipe,
+            cmds,
+        }),
+        _ => Err("parse error, invalid pipe".to_string()),
     }
 }
 
