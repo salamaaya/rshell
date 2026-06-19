@@ -226,7 +226,7 @@ fn build_inline_node_recurse(
         match &tokens[i] {
             Token::Id(cmd) => {
                 i = build_command_node(cmd.to_string(), tokens, i, ast)?;
-                let command = get_last_command(ast)?;
+                let command = pop_command(ast)?;
                 inline_nodes.push(command);
             }
 
@@ -236,7 +236,7 @@ fn build_inline_node_recurse(
 
             Token::LeftParen => {
                 i = build_subshell_node(tokens, i, ast)?;
-                let subshell = get_last_subshell(ast)?;
+                let subshell = pop_subshell(ast)?;
                 inline_nodes.push(subshell);
             }
             Token::RightParen => {
@@ -244,7 +244,7 @@ fn build_inline_node_recurse(
             }
             Token::LeftCurlyBracket => {
                 i = build_inline_node_recurse(tokens, i, ast, &mut Vec::new())?;
-                let inline_group = get_last_inline(ast)?;
+                let inline_group = pop_inline(ast)?;
                 inline_nodes.push(inline_group);
             }
             Token::RightCurlyBracket => {
@@ -272,19 +272,40 @@ fn build_inline_node_recurse(
 fn build_pipe_node(tokens: &[Token], mut i: usize, ast: &mut Vec<Node>) -> Result<usize, String> {
     let mut commands = Vec::new();
     let len = tokens.len();
+    let mut num_pipes = 0;
 
-    i += 1;
+    let _ = pop_command(ast)?;
+    i -= 1;
 
     while i < len {
         match &tokens[i] {
             Token::Id(cmd) => {
-                let curr_cmd = get_last_command(ast)?;
                 i = build_command_node(cmd.to_string(), tokens, i, ast)?;
+
+                let curr_cmd = pop_command(ast)?;
                 commands.push(curr_cmd);
+            }
+
+            Token::LeftParen => {
+                i = build_subshell_node(tokens, i, ast)?;
+                match pop_subshell(ast)? {
+                    Node::Subshell { cmd } => {
+                        let command = Node::Command {
+                            cmd: "./target/debug/rshell".to_string(),
+                            args: ["-c".to_string(), (&cmd).to_string()].to_vec(),
+                        };
+                        commands.push(command);
+                    }
+                    _ => return Err("invalid subshell".to_string()),
+                };
+            }
+            Token::RightParen => {
+                return Err("parse error near ')'".to_string());
             }
 
             Token::Pipe => {
                 i += 1;
+                num_pipes += 1;
             }
 
             _ => {
@@ -294,8 +315,10 @@ fn build_pipe_node(tokens: &[Token], mut i: usize, ast: &mut Vec<Node>) -> Resul
         }
     }
 
-    let last_cmd = get_last_command(ast)?;
-    commands.push(last_cmd);
+    if num_pipes != commands.len() - 1 {
+        return Err("parse error, invalid pipe".to_string());
+    }
+
     ast.push(Node::Redirect {
         op: Operator::Pipe,
         cmds: commands.to_vec(),
@@ -360,21 +383,21 @@ fn expr(ast: &[Node]) -> Result<ExitStatus, String> {
     Ok(exit_code)
 }
 
-fn get_last_command(ast: &mut Vec<Node>) -> Result<Node, String> {
+fn pop_command(ast: &mut Vec<Node>) -> Result<Node, String> {
     match ast.pop() {
         Some(Node::Command { cmd, args }) => Ok(Node::Command { cmd, args }),
         _ => Err("parse error, invalid command".to_string()),
     }
 }
 
-fn get_last_subshell(ast: &mut Vec<Node>) -> Result<Node, String> {
+fn pop_subshell(ast: &mut Vec<Node>) -> Result<Node, String> {
     match ast.pop() {
         Some(Node::Subshell { cmd }) => Ok(Node::Subshell { cmd }),
         _ => Err("parse error, invalid subshell".to_string()),
     }
 }
 
-fn get_last_inline(ast: &mut Vec<Node>) -> Result<Node, String> {
+fn pop_inline(ast: &mut Vec<Node>) -> Result<Node, String> {
     match ast.pop() {
         Some(Node::InlineGroup { cmds }) => Ok(Node::InlineGroup { cmds }),
         _ => Err("parse error, invalid inline group".to_string()),

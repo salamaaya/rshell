@@ -5,6 +5,7 @@ use std::io;
 use std::io::pipe;
 use std::process::{Command, ExitStatus, Stdio};
 
+#[derive(Debug, Clone)]
 pub struct Process {
     pub cmd: String,
     pub args: Vec<String>,
