@@ -77,14 +77,14 @@ rshell TODO Checklist
 - [ ] Testing
 
 ## 7. Pipes
-- [ ] Create Unix pipes
-- [ ] Redirect stdout to pipe
-- [ ] Redirect stdin from pipe
-- [ ] Execute piped commands
-- [ ] Support multi-stage pipes
-- [ ] Close unused file descriptors
-- [ ] Handle pipe failures
-- [ ] Test pipe behavior
+- [x] Create Unix pipes
+- [x] Redirect stdout to pipe
+- [x] Redirect stdin from pipe
+- [x] Execute piped commands
+- [x] Support multi-stage pipes
+- [x] Close unused file descriptors
+- [x] Handle pipe failures
+- [x] Test pipe behavior
 
 ## 8. Redirection
 - [ ] Output Redirection
