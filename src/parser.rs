@@ -274,33 +274,38 @@ fn build_pipe_node(tokens: &[Token], mut i: usize, ast: &mut Vec<Node>) -> Resul
     let len = tokens.len();
     let mut num_pipes = 0;
 
-    let _ = pop_command(ast)?;
-    i -= 1;
+    match ast.pop() {
+        Some(command) => commands.push(command),
+        _ => return Err("parse error, invalid pipe".to_string()),
+    }
 
     while i < len {
         match &tokens[i] {
             Token::Id(cmd) => {
                 i = build_command_node(cmd.to_string(), tokens, i, ast)?;
 
-                let curr_cmd = pop_command(ast)?;
-                commands.push(curr_cmd);
+                let command = pop_command(ast)?;
+                commands.push(command);
             }
 
             Token::LeftParen => {
                 i = build_subshell_node(tokens, i, ast)?;
-                match pop_subshell(ast)? {
-                    Node::Subshell { cmd } => {
-                        let command = Node::Command {
-                            cmd: "./target/debug/rshell".to_string(),
-                            args: ["-c".to_string(), (&cmd).to_string()].to_vec(),
-                        };
-                        commands.push(command);
-                    }
-                    _ => return Err("invalid subshell".to_string()),
-                };
+
+                let subshell = pop_subshell(ast)?;
+                commands.push(subshell);
             }
             Token::RightParen => {
                 return Err("parse error near ')'".to_string());
+            }
+
+            Token::LeftCurlyBracket => {
+                i = build_inline_node(tokens, i, ast)?;
+
+                let inline = pop_inline(ast)?;
+                commands.push(inline);
+            }
+            Token::RightCurlyBracket => {
+                return Err("parse error near '}'".to_string());
             }
 
             Token::Pipe => {
@@ -360,16 +365,19 @@ fn expr(ast: &[Node]) -> Result<ExitStatus, String> {
             } => {
                 let mut procs = Vec::new();
                 for c in cmds {
-                    let proc = match c {
-                        Node::Command { cmd, args } => Process {
-                            cmd: cmd.to_string(),
-                            args: args.to_vec(),
-                        },
+                    match c {
+                        Node::Command { cmd: _, args: _ } | Node::Subshell { cmd: _ } => {
+                            procs.push(command_to_proccess(c.clone())?);
+                        }
+                        Node::InlineGroup { cmds } => {
+                            for cmd in cmds {
+                                procs.push(command_to_proccess(cmd.clone())?);
+                            }
+                        }
                         _ => {
                             return Err("invalid pipe".to_string());
                         }
                     };
-                    procs.push(proc);
                 }
                 exit_code = run_cmd_pipe(&procs)?;
             }
@@ -402,4 +410,24 @@ fn pop_inline(ast: &mut Vec<Node>) -> Result<Node, String> {
         Some(Node::InlineGroup { cmds }) => Ok(Node::InlineGroup { cmds }),
         _ => Err("parse error, invalid inline group".to_string()),
     }
+}
+
+fn command_to_proccess(command: Node) -> Result<Process, String> {
+    match command {
+        Node::Command { cmd, args } => {
+            return Ok(Process {
+                cmd: cmd.to_string(),
+                args: args.to_vec(),
+            });
+        }
+        Node::Subshell { cmd } => {
+            return Ok(Process {
+                cmd: "./target/debug/rshell".to_string(),
+                args: ["-c".to_string(), (&cmd).to_string()].to_vec(),
+            });
+        }
+        _ => {
+            return Err("invalid command".to_string());
+        }
+    };
 }
