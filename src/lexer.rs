@@ -203,7 +203,7 @@ pub fn lex(input: &str) -> Result<Vec<Token>, String> {
 }
 
 fn is_special(c: char) -> bool {
-    return matches!(
+    matches!(
         c,
         '\"' | '\''
             | '\\'
@@ -220,5 +220,5 @@ fn is_special(c: char) -> bool {
             | ')'
             | '!'
             | '$'
-    );
+    )
 }

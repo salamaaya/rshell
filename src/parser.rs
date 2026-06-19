@@ -208,7 +208,7 @@ fn build_subshell_node(
 }
 
 fn build_inline_node(tokens: &[Token], i: usize, ast: &mut Vec<Node>) -> Result<usize, String> {
-    return build_inline_node_recurse(tokens, i, ast, &mut Vec::new());
+    build_inline_node_recurse(tokens, i, ast, &mut Vec::new())
 }
 
 fn build_inline_node_recurse(
@@ -362,27 +362,21 @@ fn expr(ast: &[Node]) -> Result<ExitStatus, String> {
 
 fn get_last_command(ast: &mut Vec<Node>) -> Result<Node, String> {
     match ast.pop() {
-        Some(Node::Command { cmd, args }) => return Ok(Node::Command { cmd, args }),
-        _ => {
-            return Err("parse error, invalid command".to_string());
-        }
-    };
+        Some(Node::Command { cmd, args }) => Ok(Node::Command { cmd, args }),
+        _ => Err("parse error, invalid command".to_string()),
+    }
 }
 
 fn get_last_subshell(ast: &mut Vec<Node>) -> Result<Node, String> {
     match ast.pop() {
-        Some(Node::Subshell { cmd }) => return Ok(Node::Subshell { cmd }),
-        _ => {
-            return Err("parse error, invalid subshell".to_string());
-        }
-    };
+        Some(Node::Subshell { cmd }) => Ok(Node::Subshell { cmd }),
+        _ => Err("parse error, invalid subshell".to_string()),
+    }
 }
 
 fn get_last_inline(ast: &mut Vec<Node>) -> Result<Node, String> {
     match ast.pop() {
-        Some(Node::InlineGroup { cmds }) => return Ok(Node::InlineGroup { cmds }),
-        _ => {
-            return Err("parse error, invalid inline group".to_string());
-        }
-    };
+        Some(Node::InlineGroup { cmds }) => Ok(Node::InlineGroup { cmds }),
+        _ => Err("parse error, invalid inline group".to_string()),
+    }
 }
