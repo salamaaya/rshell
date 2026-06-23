@@ -1,8 +1,10 @@
 use crate::builtin::is_builtin;
 use crate::builtin::run_builtin;
 
+use std::fs::File;
 use std::io;
 use std::io::pipe;
+use std::os::fd::OwnedFd;
 use std::process::{Command, ExitStatus, Stdio};
 
 #[derive(Debug, Clone)]
@@ -64,6 +66,23 @@ pub fn run_cmd_pipe(procs: &[Process]) -> Result<ExitStatus, String> {
     for mut child in children {
         result = child.wait().map_err(|e| e.to_string())?;
     }
+
+    Ok(result)
+}
+
+pub fn run_cmd_redirect_input(proc: &Process, input: &String) -> Result<ExitStatus, String> {
+    let file = match File::open(input) {
+        Ok(f) => f,
+        Err(e) => return Err(e.to_string()),
+    };
+    let stdin = Stdio::from(OwnedFd::from(file));
+
+    let mut child = Command::new(&proc.cmd)
+        .args(&proc.args)
+        .stdin(stdin)
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    let result = child.wait().map_err(|e| e.to_string())?;
 
     Ok(result)
 }

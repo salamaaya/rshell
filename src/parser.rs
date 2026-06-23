@@ -2,7 +2,7 @@ use clap::error::Result;
 
 use crate::{
     lexer::Token,
-    process::{Process, run_cmd, run_cmd_pipe},
+    process::{Process, run_cmd, run_cmd_pipe, run_cmd_redirect_input},
 };
 
 use std::env;
@@ -36,6 +36,7 @@ pub enum Node {
     Redirect {
         op: Operator,
         cmds: Vec<Node>,
+        file: String,
     },
 
     Binary {
@@ -88,6 +89,10 @@ pub fn build_ast(tokens: &[Token]) -> Result<Vec<Node>, String> {
 
             Token::Pipe => {
                 i = build_pipe_node(tokens, i, &mut ast)?;
+            }
+
+            Token::RedirectInput => {
+                i = build_redirect_input_node(tokens, i, &mut ast)?;
             }
 
             _ => {
@@ -260,8 +265,16 @@ fn build_inline_node_recurse(
                 inline_nodes.push(pipe);
             }
 
+            Token::RedirectInput => {
+                ast.push(inline_nodes.pop().unwrap());
+                i = build_redirect_input_node(tokens, i, ast)?;
+                let redirect = pop_redirect(ast)?;
+                inline_nodes.push(redirect);
+            }
+
             _ => {
                 print!("TODO: build_inline_node");
+                break;
             }
         }
     }
@@ -321,6 +334,12 @@ fn build_pipe_node(tokens: &[Token], mut i: usize, ast: &mut Vec<Node>) -> Resul
                 num_pipes += 1;
             }
 
+            Token::RedirectInput => {
+                i = build_redirect_input_node(tokens, i, ast)?;
+                let redirect = pop_redirect(ast)?;
+                commands.push(redirect);
+            }
+
             _ => {
                 println!("TODO: build_pipe_node");
                 break;
@@ -335,7 +354,43 @@ fn build_pipe_node(tokens: &[Token], mut i: usize, ast: &mut Vec<Node>) -> Resul
     ast.push(Node::Redirect {
         op: Operator::Pipe,
         cmds: commands.to_vec(),
+        file: String::new(),
     });
+
+    Ok(i)
+}
+
+fn build_redirect_input_node(
+    tokens: &[Token],
+    mut i: usize,
+    ast: &mut Vec<Node>,
+) -> Result<usize, String> {
+    let len = tokens.len();
+    i += 1;
+    if i > len {
+        return Err("parse error near '<'".to_string());
+    }
+
+    let command = match ast.pop() {
+        Some(cmd) => cmd,
+        _ => return Err("parse error near '<'".to_string()),
+    };
+
+    match &tokens[i] {
+        Token::Id(file) => {
+            ast.push(Node::Redirect {
+                op: Operator::RedirectInput,
+                cmds: [command].to_vec(),
+                file: file.to_string(),
+            });
+
+            i += 1;
+        }
+
+        _ => {
+            return Err("parse error near '<'".to_string());
+        }
+    }
 
     Ok(i)
 }
@@ -370,6 +425,7 @@ fn expr(ast: &[Node]) -> Result<ExitStatus, String> {
             Node::Redirect {
                 op: Operator::Pipe,
                 cmds,
+                file: _file,
             } => {
                 let mut procs = Vec::new();
                 for c in cmds {
@@ -382,12 +438,39 @@ fn expr(ast: &[Node]) -> Result<ExitStatus, String> {
                                 procs.push(command_to_proccess(cmd.clone())?);
                             }
                         }
+                        Node::Redirect {
+                            op: Operator::RedirectInput,
+                            cmds,
+                            file,
+                        } => {}
                         _ => {
                             return Err("invalid pipe".to_string());
                         }
                     };
                 }
                 exit_code = run_cmd_pipe(&procs)?;
+            }
+
+            Node::Redirect {
+                op: Operator::RedirectInput,
+                cmds,
+                file,
+            } => {
+                match &cmds[0] {
+                    Node::Command { cmd: _, args: _ } | Node::Subshell { cmd: _ } => {
+                        let proc = command_to_proccess(cmds[0].clone())?;
+                        exit_code = run_cmd_redirect_input(&proc, file)?;
+                    }
+                    Node::InlineGroup { cmds } => {
+                        for cmd in cmds {
+                            let proc = command_to_proccess(cmd.clone())?;
+                            exit_code = run_cmd_redirect_input(&proc, file)?;
+                        }
+                    }
+                    _ => {
+                        return Err("parse error near '<'".to_string());
+                    }
+                };
             }
 
             _ => println!("TODO: expr"),
@@ -425,9 +508,35 @@ fn pop_pipe(ast: &mut Vec<Node>) -> Result<Node, String> {
         Some(Node::Redirect {
             op: Operator::Pipe,
             cmds,
+            file,
         }) => Ok(Node::Redirect {
             op: Operator::Pipe,
             cmds,
+            file,
+        }),
+        _ => Err("parse error, invalid pipe".to_string()),
+    }
+}
+
+fn pop_redirect(ast: &mut Vec<Node>) -> Result<Node, String> {
+    match ast.pop() {
+        Some(Node::Redirect {
+            op: Operator::RedirectInput,
+            cmds,
+            file,
+        }) => Ok(Node::Redirect {
+            op: Operator::RedirectInput,
+            cmds,
+            file,
+        }),
+        Some(Node::Redirect {
+            op: Operator::RedirectOutput,
+            cmds,
+            file,
+        }) => Ok(Node::Redirect {
+            op: Operator::RedirectOutput,
+            cmds,
+            file,
         }),
         _ => Err("parse error, invalid pipe".to_string()),
     }
@@ -448,7 +557,7 @@ fn command_to_proccess(command: Node) -> Result<Process, String> {
             });
         }
         _ => {
-            return Err("invalid command".to_string());
+            return Err("cannot convert command to process".to_string());
         }
     };
 }
