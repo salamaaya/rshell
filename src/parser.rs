@@ -92,6 +92,12 @@ pub fn build_ast(tokens: &[Token]) -> Result<Vec<Node>, String> {
             }
 
             Token::RedirectInput => {
+                // not for when i come back to this:
+                // this doesn't work with pipes, for example:
+                // cat < file.txt | wc -l
+                // or {cat < file.txt} | wc -l
+                // (but does work with subshells)
+                // consider refactoring?? but get it fixing somehow!
                 i = build_redirect_input_node(tokens, i, &mut ast)?;
             }
 

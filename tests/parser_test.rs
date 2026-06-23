@@ -458,7 +458,7 @@ fn simple_pipe_ast() {
     let output = format!("{:?}", ast);
 
     assert_eq!(
-        r#"[Redirect { op: Pipe, cmds: [Command { cmd: "ls", args: [] }, Command { cmd: "wc", args: [] }] }]"#,
+        r#"[Redirect { op: Pipe, cmds: [Command { cmd: "ls", args: [] }, Command { cmd: "wc", args: [] }], file: "" }]"#,
         output
     );
 }
@@ -473,7 +473,7 @@ fn pipe_with_arguments_ast() {
     let output = format!("{:?}", ast);
 
     assert_eq!(
-        r#"[Redirect { op: Pipe, cmds: [Command { cmd: "echo", args: ["hello"] }, Command { cmd: "grep", args: ["hello"] }] }]"#,
+        r#"[Redirect { op: Pipe, cmds: [Command { cmd: "echo", args: ["hello"] }, Command { cmd: "grep", args: ["hello"] }], file: "" }]"#,
         output
     );
 }
@@ -488,7 +488,7 @@ fn three_command_pipe_ast() {
     let output = format!("{:?}", ast);
 
     assert_eq!(
-        r#"[Redirect { op: Pipe, cmds: [Command { cmd: "cat", args: ["file"] }, Command { cmd: "grep", args: ["test"] }, Command { cmd: "wc", args: [] }] }]"#,
+        r#"[Redirect { op: Pipe, cmds: [Command { cmd: "cat", args: ["file"] }, Command { cmd: "grep", args: ["test"] }, Command { cmd: "wc", args: [] }], file: "" }]"#,
         output
     );
 }
@@ -507,7 +507,7 @@ fn env_var_inside_pipe_ast() {
     let output = format!("{:?}", ast);
 
     assert_eq!(
-        r#"[Redirect { op: Pipe, cmds: [Command { cmd: "echo", args: ["hello"] }, Command { cmd: "wc", args: [] }] }]"#,
+        r#"[Redirect { op: Pipe, cmds: [Command { cmd: "echo", args: ["hello"] }, Command { cmd: "wc", args: [] }], file: "" }]"#,
         output
     );
 }
@@ -522,7 +522,7 @@ fn subshell_on_left_side_of_pipe_ast() {
     let output = format!("{:?}", ast);
 
     assert_eq!(
-        r#"[Redirect { op: Pipe, cmds: [Subshell { cmd: "ls " }, Command { cmd: "wc", args: [] }] }]"#,
+        r#"[Redirect { op: Pipe, cmds: [Subshell { cmd: "ls " }, Command { cmd: "wc", args: [] }], file: "" }]"#,
         output
     );
 }
@@ -537,7 +537,7 @@ fn subshell_on_right_side_of_pipe_ast() {
     let output = format!("{:?}", ast);
 
     assert_eq!(
-        r#"[Redirect { op: Pipe, cmds: [Command { cmd: "ls", args: [] }, Subshell { cmd: "wc " }] }]"#,
+        r#"[Redirect { op: Pipe, cmds: [Command { cmd: "ls", args: [] }, Subshell { cmd: "wc " }], file: "" }]"#,
         output
     );
 }
@@ -552,7 +552,7 @@ fn inline_group_on_left_side_of_pipe_ast() {
     let output = format!("{:?}", ast);
 
     assert_eq!(
-        r#"[Redirect { op: Pipe, cmds: [InlineGroup { cmds: [Command { cmd: "ls", args: [] }] }, Command { cmd: "wc", args: [] }] }]"#,
+        r#"[Redirect { op: Pipe, cmds: [InlineGroup { cmds: [Command { cmd: "ls", args: [] }] }, Command { cmd: "wc", args: [] }], file: "" }]"#,
         output
     );
 }
@@ -567,7 +567,7 @@ fn inline_group_on_right_side_of_pipe_ast() {
     let output = format!("{:?}", ast);
 
     assert_eq!(
-        r#"[Redirect { op: Pipe, cmds: [Command { cmd: "ls", args: [] }, InlineGroup { cmds: [Command { cmd: "wc", args: [] }] }] }]"#,
+        r#"[Redirect { op: Pipe, cmds: [Command { cmd: "ls", args: [] }, InlineGroup { cmds: [Command { cmd: "wc", args: [] }] }], file: "" }]"#,
         output
     );
 }
@@ -582,7 +582,7 @@ fn pipe_inside_inline_group_ast() {
     let output = format!("{:?}", ast);
 
     assert_eq!(
-        r#"[InlineGroup { cmds: [Redirect { op: Pipe, cmds: [Command { cmd: "ls", args: [] }, Command { cmd: "wc", args: [] }] }] }]"#,
+        r#"[InlineGroup { cmds: [Redirect { op: Pipe, cmds: [Command { cmd: "ls", args: [] }, Command { cmd: "wc", args: [] }], file: "" }] }]"#,
         output
     );
 }
@@ -601,7 +601,7 @@ fn nested_pipe_group_subshell_ast() {
     let output = format!("{:?}", ast);
 
     assert_eq!(
-        r#"[Redirect { op: Pipe, cmds: [InlineGroup { cmds: [Redirect { op: Pipe, cmds: [Command { cmd: "echo", args: ["hello"] }, Subshell { cmd: "cat " }] }] }, Command { cmd: "wc", args: [] }] }]"#,
+        r#"[Redirect { op: Pipe, cmds: [InlineGroup { cmds: [Redirect { op: Pipe, cmds: [Command { cmd: "echo", args: ["hello"] }, Subshell { cmd: "cat " }], file: "" }] }, Command { cmd: "wc", args: [] }], file: "" }]"#,
         output
     );
 }
