@@ -10,6 +10,8 @@ fn echo_empty() {
     let proc = Process {
         cmd: "echo".to_string(),
         args: args,
+        stdin: None,
+        stdout: None,
     };
 
     run_builtin(&mut stdout, &proc);
@@ -26,6 +28,8 @@ fn echo_basic() {
     let proc = Process {
         cmd: "echo".to_string(),
         args: args,
+        stdin: None,
+        stdout: None,
     };
 
     run_builtin(&mut stdout, &proc);
@@ -43,6 +47,8 @@ fn echo_no_newline() {
     let proc = Process {
         cmd: "echo".to_string(),
         args: args,
+        stdin: None,
+        stdout: None,
     };
 
     run_builtin(&mut stdout, &proc);
@@ -60,6 +66,8 @@ fn echo_newline_after_args() {
     let proc = Process {
         cmd: "echo".to_string(),
         args: args,
+        stdin: None,
+        stdout: None,
     };
 
     run_builtin(&mut stdout, &proc);
@@ -76,6 +84,8 @@ fn echo_no_newline_escape() {
     let proc = Process {
         cmd: "echo".to_string(),
         args: args,
+        stdin: None,
+        stdout: None,
     };
 
     run_builtin(&mut stdout, &proc);
@@ -93,6 +103,8 @@ fn echo_escapes() {
     let proc = Process {
         cmd: "echo".to_string(),
         args: args,
+        stdin: None,
+        stdout: None,
     };
 
     run_builtin(&mut stdout, &proc);
@@ -109,6 +121,8 @@ fn echo_disable_escapes() {
     let proc = Process {
         cmd: "echo".to_string(),
         args: args,
+        stdin: None,
+        stdout: None,
     };
 
     run_builtin(&mut stdout, &proc);
@@ -125,6 +139,8 @@ fn echo_escape_sequence() {
     let proc = Process {
         cmd: "echo".to_string(),
         args: args,
+        stdin: None,
+        stdout: None,
     };
 
     run_builtin(&mut stdout, &proc);
@@ -141,6 +157,8 @@ fn echo_backslash_c() {
     let proc = Process {
         cmd: "echo".to_string(),
         args: args,
+        stdin: None,
+        stdout: None,
     };
 
     run_builtin(&mut stdout, &proc);
@@ -157,6 +175,8 @@ fn echo_octal() {
     let proc = Process {
         cmd: "echo".to_string(),
         args: args,
+        stdin: None,
+        stdout: None,
     };
 
     run_builtin(&mut stdout, &proc);
@@ -173,6 +193,8 @@ fn echo_hex() {
     let proc = Process {
         cmd: "echo".to_string(),
         args: args,
+        stdin: None,
+        stdout: None,
     };
 
     run_builtin(&mut stdout, &proc);

@@ -11,6 +11,8 @@ use std::process::{Command, ExitStatus, Stdio};
 pub struct Process {
     pub cmd: String,
     pub args: Vec<String>,
+    pub stdin: Option<String>,
+    pub stdout: Option<String>,
 }
 
 pub fn run_cmd(proc: &Process) -> Result<ExitStatus, String> {
@@ -39,7 +41,10 @@ pub fn run_cmd_pipe(procs: &[Process]) -> Result<ExitStatus, String> {
     }
 
     for i in 0..num_procs {
-        let stdin = if i == 0 {
+        let stdin = if let Some(file) = &procs[i].stdin {
+            let file = File::open(file).map_err(|e| e.to_string())?;
+            Stdio::from(file)
+        } else if i == 0 {
             Stdio::inherit()
         } else {
             Stdio::from(pipes[i - 1].0.try_clone().map_err(|e| e.to_string())?)

@@ -314,6 +314,11 @@ fn build_pipe_node(tokens: &[Token], mut i: usize, ast: &mut Vec<Node>) -> Resul
                 commands.push(command);
             }
 
+            Token::Semicolon => {
+                i += 1;
+                break;
+            }
+
             Token::LeftParen => {
                 i = build_subshell_node(tokens, i, ast)?;
 
@@ -412,6 +417,8 @@ fn expr(ast: &[Node]) -> Result<ExitStatus, String> {
                 let proc = Process {
                     cmd: cmd.to_string(),
                     args: args.to_vec(),
+                    stdin: None,
+                    stdout: None,
                 };
                 exit_code = run_cmd(&proc)?;
             }
@@ -420,6 +427,8 @@ fn expr(ast: &[Node]) -> Result<ExitStatus, String> {
                 let proc = Process {
                     cmd: "./target/debug/rshell".to_string(),
                     args: ["-c".to_string(), (&cmd).to_string()].to_vec(),
+                    stdin: None,
+                    stdout: None,
                 };
                 exit_code = run_cmd(&proc)?;
             }
@@ -437,18 +446,22 @@ fn expr(ast: &[Node]) -> Result<ExitStatus, String> {
                 for c in cmds {
                     match c {
                         Node::Command { cmd: _, args: _ } | Node::Subshell { cmd: _ } => {
-                            procs.push(command_to_proccess(c.clone())?);
+                            procs.push(node_to_process(c.clone())?);
                         }
                         Node::InlineGroup { cmds } => {
                             for cmd in cmds {
-                                procs.push(command_to_proccess(cmd.clone())?);
+                                procs.push(node_to_process(cmd.clone())?);
                             }
                         }
                         Node::Redirect {
                             op: Operator::RedirectInput,
                             cmds,
                             file,
-                        } => {}
+                        } => {
+                            let mut proc = node_to_process(cmds[0].clone())?;
+                            proc.stdin = Some(file.clone());
+                            procs.push(proc);
+                        }
                         _ => {
                             return Err("invalid pipe".to_string());
                         }
@@ -464,12 +477,12 @@ fn expr(ast: &[Node]) -> Result<ExitStatus, String> {
             } => {
                 match &cmds[0] {
                     Node::Command { cmd: _, args: _ } | Node::Subshell { cmd: _ } => {
-                        let proc = command_to_proccess(cmds[0].clone())?;
+                        let proc = node_to_process(cmds[0].clone())?;
                         exit_code = run_cmd_redirect_input(&proc, file)?;
                     }
                     Node::InlineGroup { cmds } => {
                         for cmd in cmds {
-                            let proc = command_to_proccess(cmd.clone())?;
+                            let proc = node_to_process(cmd.clone())?;
                             exit_code = run_cmd_redirect_input(&proc, file)?;
                         }
                     }
@@ -548,22 +561,43 @@ fn pop_redirect(ast: &mut Vec<Node>) -> Result<Node, String> {
     }
 }
 
-fn command_to_proccess(command: Node) -> Result<Process, String> {
+fn node_to_process(command: Node) -> Result<Process, String> {
     match command {
         Node::Command { cmd, args } => {
             return Ok(Process {
                 cmd: cmd.to_string(),
                 args: args.to_vec(),
+                stdin: None,
+                stdout: None,
             });
         }
         Node::Subshell { cmd } => {
             return Ok(Process {
                 cmd: "./target/debug/rshell".to_string(),
                 args: ["-c".to_string(), (&cmd).to_string()].to_vec(),
+                stdin: None,
+                stdout: None,
+            });
+        }
+        Node::Redirect {
+            op: Operator::RedirectInput,
+            cmds,
+            file,
+        } => {
+            let (cmd, args) = match &cmds[0] {
+                Node::Command { cmd, args } => (cmd.to_string(), args.to_vec()),
+                _ => return Err("cannot convert command to process".to_string()),
+            };
+
+            return Ok(Process {
+                cmd: cmd,
+                args: args,
+                stdin: Some(file),
+                stdout: None,
             });
         }
         _ => {
-            return Err("cannot convert command to process".to_string());
+            return Err("cannot convert Node to Process".to_string());
         }
     };
 }
