@@ -95,7 +95,15 @@ pub fn build_ast(tokens: &[Token]) -> Result<Vec<Node>, String> {
                 i = build_redirect_input_node(tokens, i, &mut ast)?;
             }
             Token::RedirectOutput => {
-                i = build_redirect_output_node(tokens, i, &mut ast)?;
+                i = build_redirect_output_node(tokens, i, &mut ast, Operator::RedirectOutput)?;
+            }
+            Token::RedirectOutputAppend => {
+                i = build_redirect_output_node(
+                    tokens,
+                    i,
+                    &mut ast,
+                    Operator::RedirectOutputAppend,
+                )?;
             }
 
             _ => {
@@ -407,6 +415,7 @@ fn build_redirect_output_node(
     tokens: &[Token],
     mut i: usize,
     ast: &mut Vec<Node>,
+    op: Operator,
 ) -> Result<usize, String> {
     let len = tokens.len();
     i += 1;
@@ -422,7 +431,7 @@ fn build_redirect_output_node(
     match &tokens[i] {
         Token::Id(file) => {
             ast.push(Node::Redirect {
-                op: Operator::RedirectOutput,
+                op: op,
                 cmds: [prev_node].to_vec(),
                 file: file.to_string(),
             });
@@ -541,12 +550,34 @@ fn expr(ast: &[Node]) -> Result<ExitStatus, String> {
                 match &cmds[0] {
                     Node::Command { cmd: _, args: _ } | Node::Subshell { cmd: _ } => {
                         let proc = node_to_process(cmds[0].clone())?;
-                        exit_code = run_cmd_redirect_output(&proc, file)?;
+                        exit_code = run_cmd_redirect_output(&proc, file, true, false)?;
                     }
                     Node::InlineGroup { cmds } => {
                         for cmd in cmds {
                             let proc = node_to_process(cmd.clone())?;
-                            exit_code = run_cmd_redirect_output(&proc, file)?;
+                            exit_code = run_cmd_redirect_output(&proc, file, true, false)?;
+                        }
+                    }
+                    _ => {
+                        return Err("parse error near '>'".to_string());
+                    }
+                };
+            }
+
+            Node::Redirect {
+                op: Operator::RedirectOutputAppend,
+                cmds,
+                file,
+            } => {
+                match &cmds[0] {
+                    Node::Command { cmd: _, args: _ } | Node::Subshell { cmd: _ } => {
+                        let proc = node_to_process(cmds[0].clone())?;
+                        exit_code = run_cmd_redirect_output(&proc, file, false, true)?;
+                    }
+                    Node::InlineGroup { cmds } => {
+                        for cmd in cmds {
+                            let proc = node_to_process(cmd.clone())?;
+                            exit_code = run_cmd_redirect_output(&proc, file, false, true)?;
                         }
                     }
                     _ => {

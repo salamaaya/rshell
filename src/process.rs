@@ -92,11 +92,17 @@ pub fn run_cmd_redirect_input(proc: &Process, input: &String) -> Result<ExitStat
     Ok(result)
 }
 
-pub fn run_cmd_redirect_output(proc: &Process, output: &String) -> Result<ExitStatus, String> {
+pub fn run_cmd_redirect_output(
+    proc: &Process,
+    output: &String,
+    truncate: bool,
+    append: bool,
+) -> Result<ExitStatus, String> {
     let file = OpenOptions::new()
         .create(true)
         .write(true)
-        .truncate(true)
+        .truncate(truncate)
+        .append(append)
         .open(output)
         .map_err(|e| e.to_string())?;
 
