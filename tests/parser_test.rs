@@ -605,3 +605,305 @@ fn nested_pipe_group_subshell_ast() {
         output
     );
 }
+
+#[test]
+fn simple_input_redirect_ast() {
+    let input = String::from("cat < input.txt");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: RedirectInput, cmds: [Command { cmd: "cat", args: [] }], file: "input.txt" }]"#,
+        output
+    );
+}
+
+#[test]
+fn input_redirect_with_arguments_ast() {
+    let input = String::from("grep hello world < input.txt");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: RedirectInput, cmds: [Command { cmd: "grep", args: ["hello", "world"] }], file: "input.txt" }]"#,
+        output
+    );
+}
+
+#[test]
+fn input_redirect_between_commands_ast() {
+    let input = String::from("pwd; cat < input.txt; ls");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Command { cmd: "pwd", args: [] }, Redirect { op: RedirectInput, cmds: [Command { cmd: "cat", args: [] }], file: "input.txt" }, Command { cmd: "ls", args: [] }]"#,
+        output
+    );
+}
+
+#[test]
+fn env_var_inside_input_redirect_ast() {
+    unsafe {
+        std::env::set_var("TEST_VAR", "hello");
+    }
+
+    let input = String::from("grep $TEST_VAR < input.txt");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: RedirectInput, cmds: [Command { cmd: "grep", args: ["hello"] }], file: "input.txt" }]"#,
+        output
+    );
+}
+
+#[test]
+fn subshell_input_redirect_ast() {
+    let input = String::from("(cat) < input.txt");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: RedirectInput, cmds: [Subshell { cmd: "cat " }], file: "input.txt" }]"#,
+        output
+    );
+}
+
+#[test]
+fn inline_group_input_redirect_ast() {
+    let input = String::from("{cat} < input.txt");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: RedirectInput, cmds: [InlineGroup { cmds: [Command { cmd: "cat", args: [] }] }], file: "input.txt" }]"#,
+        output
+    );
+}
+
+#[test]
+fn input_redirect_inside_inline_group_ast() {
+    let input = String::from("{cat < input.txt}");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[InlineGroup { cmds: [Redirect { op: RedirectInput, cmds: [Command { cmd: "cat", args: [] }], file: "input.txt" }] }]"#,
+        output
+    );
+}
+
+#[test]
+fn input_redirect_on_left_side_of_pipe_ast() {
+    let input = String::from("cat < input.txt | wc");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: Pipe, cmds: [Redirect { op: RedirectInput, cmds: [Command { cmd: "cat", args: [] }], file: "input.txt" }, Command { cmd: "wc", args: [] }], file: "" }]"#,
+        output
+    );
+}
+
+#[test]
+fn leading_input_redirect_error() {
+    let input = String::from("< input.txt");
+
+    let tokens = lex(&input).unwrap();
+
+    assert!(build_ast(&tokens).is_err());
+}
+
+#[test]
+fn invalid_input_redirect_target_error() {
+    let input = String::from("cat < |");
+
+    let tokens = lex(&input).unwrap();
+
+    assert!(build_ast(&tokens).is_err());
+}
+
+#[test]
+fn input_redirect_on_right_side_of_pipe_error() {
+    let input = String::from("ls | cat < input.txt");
+
+    let tokens = lex(&input).unwrap();
+
+    assert!(build_ast(&tokens).is_err());
+}
+
+#[test]
+fn simple_output_redirect_ast() {
+    let input = String::from("echo hello > output.txt");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: RedirectOutput, cmds: [Command { cmd: "echo", args: ["hello"] }], file: "output.txt" }]"#,
+        output
+    );
+}
+
+#[test]
+fn output_redirect_with_arguments_ast() {
+    let input = String::from("echo hello world > output.txt");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: RedirectOutput, cmds: [Command { cmd: "echo", args: ["hello", "world"] }], file: "output.txt" }]"#,
+        output
+    );
+}
+
+#[test]
+fn output_redirect_between_commands_ast() {
+    let input = String::from("pwd; echo hello > output.txt; ls");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Command { cmd: "pwd", args: [] }, Redirect { op: RedirectOutput, cmds: [Command { cmd: "echo", args: ["hello"] }], file: "output.txt" }, Command { cmd: "ls", args: [] }]"#,
+        output
+    );
+}
+
+#[test]
+fn env_var_inside_output_redirect_ast() {
+    unsafe {
+        std::env::set_var("TEST_VAR", "hello");
+    }
+
+    let input = String::from("echo $TEST_VAR > output.txt");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: RedirectOutput, cmds: [Command { cmd: "echo", args: ["hello"] }], file: "output.txt" }]"#,
+        output
+    );
+}
+
+#[test]
+fn subshell_output_redirect_ast() {
+    let input = String::from("(echo hello) > output.txt");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: RedirectOutput, cmds: [Subshell { cmd: "echo hello " }], file: "output.txt" }]"#,
+        output
+    );
+}
+
+#[test]
+fn inline_group_output_redirect_ast() {
+    let input = String::from("{echo hello} > output.txt");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: RedirectOutput, cmds: [InlineGroup { cmds: [Command { cmd: "echo", args: ["hello"] }] }], file: "output.txt" }]"#,
+        output
+    );
+}
+
+#[test]
+fn pipe_followed_by_output_redirect_ast() {
+    let input = String::from("echo hello | wc > output.txt");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: RedirectOutput, cmds: [Redirect { op: Pipe, cmds: [Command { cmd: "echo", args: ["hello"] }, Command { cmd: "wc", args: [] }], file: "" }], file: "output.txt" }]"#,
+        output
+    );
+}
+
+#[test]
+fn output_redirect_on_left_side_of_pipe_ast() {
+    let input = String::from("echo hello > output.txt | wc");
+
+    let tokens = lex(&input).unwrap();
+    let ast = build_ast(&tokens).unwrap();
+
+    let output = format!("{:?}", ast);
+
+    assert_eq!(
+        r#"[Redirect { op: Pipe, cmds: [Redirect { op: RedirectOutput, cmds: [Command { cmd: "echo", args: ["hello"] }], file: "output.txt" }, Command { cmd: "wc", args: [] }], file: "" }]"#,
+        output
+    );
+}
+
+#[test]
+fn leading_output_redirect_error() {
+    let input = String::from("> output.txt");
+
+    let tokens = lex(&input).unwrap();
+
+    assert!(build_ast(&tokens).is_err());
+}
+
+#[test]
+fn invalid_output_redirect_target_error() {
+    let input = String::from("echo hello > |");
+
+    let tokens = lex(&input).unwrap();
+
+    assert!(build_ast(&tokens).is_err());
+}
+
+#[test]
+fn output_redirect_inside_inline_group_error() {
+    let input = String::from("{echo hello > output.txt}");
+
+    let tokens = lex(&input).unwrap();
+
+    assert!(build_ast(&tokens).is_err());
+}

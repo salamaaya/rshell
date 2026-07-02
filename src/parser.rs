@@ -494,6 +494,15 @@ fn expr(ast: &[Node]) -> Result<ExitStatus, String> {
                             proc.stdin = Some(file.clone());
                             procs.push(proc);
                         }
+                        Node::Redirect {
+                            op: Operator::RedirectOutput,
+                            cmds,
+                            file,
+                        } => {
+                            let mut proc = node_to_process(cmds[0].clone())?;
+                            proc.stdout = Some(file.clone());
+                            procs.push(proc);
+                        }
                         _ => {
                             return Err("invalid pipe".to_string());
                         }
