@@ -87,21 +87,21 @@ rshell TODO Checklist
 - [x] Test pipe behavior
 
 ## 8. Redirection
-- [ ] Output Redirection
+- [x] Output Redirection
     - Implement >
     - Create output files
     - Truncate existing files
-- [ ] Append Redirection
+- [x] Append Redirection
     - Implement >>
     - Append to files
-- [ ] Input Redirection
+- [x] Input Redirection
     - Implement <
     - Read input from files
 - [ ] File Descriptor Management
     - Duplicate file descriptors
     - Restore original descriptors
     - Handle redirection errors
-- [ ] Testing
+- [x] Testing
     - Test stdout redirection
     - Test stdin redirection
     - Test append behavior
