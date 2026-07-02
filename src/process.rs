@@ -2,6 +2,7 @@ use crate::builtin::is_builtin;
 use crate::builtin::run_builtin;
 
 use std::fs::File;
+use std::fs::OpenOptions;
 use std::io;
 use std::io::pipe;
 use std::os::fd::OwnedFd;
@@ -76,15 +77,35 @@ pub fn run_cmd_pipe(procs: &[Process]) -> Result<ExitStatus, String> {
 }
 
 pub fn run_cmd_redirect_input(proc: &Process, input: &String) -> Result<ExitStatus, String> {
-    let file = match File::open(input) {
-        Ok(f) => f,
-        Err(e) => return Err(e.to_string()),
-    };
-    let stdin = Stdio::from(OwnedFd::from(file));
+    let file = OpenOptions::new().open(input).map_err(|e| e.to_string())?;
+
+    let stdin_fd = OwnedFd::from(file);
+    let stdin = Stdio::from(stdin_fd);
 
     let mut child = Command::new(&proc.cmd)
         .args(&proc.args)
         .stdin(stdin)
+        .spawn()
+        .map_err(|e| e.to_string())?;
+    let result = child.wait().map_err(|e| e.to_string())?;
+
+    Ok(result)
+}
+
+pub fn run_cmd_redirect_output(proc: &Process, output: &String) -> Result<ExitStatus, String> {
+    let file = OpenOptions::new()
+        .create(true)
+        .write(true)
+        .truncate(true)
+        .open(output)
+        .map_err(|e| e.to_string())?;
+
+    let stdout_fd = OwnedFd::from(file);
+    let stdout = Stdio::from(stdout_fd);
+
+    let mut child = Command::new(&proc.cmd)
+        .args(&proc.args)
+        .stdout(stdout)
         .spawn()
         .map_err(|e| e.to_string())?;
     let result = child.wait().map_err(|e| e.to_string())?;

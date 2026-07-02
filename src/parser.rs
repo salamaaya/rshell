@@ -2,7 +2,7 @@ use clap::error::Result;
 
 use crate::{
     lexer::Token,
-    process::{Process, run_cmd, run_cmd_pipe, run_cmd_redirect_input},
+    process::{Process, run_cmd, run_cmd_pipe, run_cmd_redirect_input, run_cmd_redirect_output},
 };
 
 use std::env;
@@ -92,13 +92,10 @@ pub fn build_ast(tokens: &[Token]) -> Result<Vec<Node>, String> {
             }
 
             Token::RedirectInput => {
-                // not for when i come back to this:
-                // this doesn't work with pipes, for example:
-                // cat < file.txt | wc -l
-                // or {cat < file.txt} | wc -l
-                // (but does work with subshells)
-                // consider refactoring?? but get it fixing somehow!
                 i = build_redirect_input_node(tokens, i, &mut ast)?;
+            }
+            Token::RedirectOutput => {
+                i = build_redirect_output_node(tokens, i, &mut ast)?;
             }
 
             _ => {
@@ -382,8 +379,8 @@ fn build_redirect_input_node(
         return Err("parse error near '<'".to_string());
     }
 
-    let command = match ast.pop() {
-        Some(cmd) => cmd,
+    let prev_node = match ast.pop() {
+        Some(node) => node,
         _ => return Err("parse error near '<'".to_string()),
     };
 
@@ -391,7 +388,7 @@ fn build_redirect_input_node(
         Token::Id(file) => {
             ast.push(Node::Redirect {
                 op: Operator::RedirectInput,
-                cmds: [command].to_vec(),
+                cmds: [prev_node].to_vec(),
                 file: file.to_string(),
             });
 
@@ -400,6 +397,41 @@ fn build_redirect_input_node(
 
         _ => {
             return Err("parse error near '<'".to_string());
+        }
+    }
+
+    Ok(i)
+}
+
+fn build_redirect_output_node(
+    tokens: &[Token],
+    mut i: usize,
+    ast: &mut Vec<Node>,
+) -> Result<usize, String> {
+    let len = tokens.len();
+    i += 1;
+    if i > len {
+        return Err("parse error near '>'".to_string());
+    }
+
+    let prev_node = match ast.pop() {
+        Some(node) => node,
+        _ => return Err("parse error near '>'".to_string()),
+    };
+
+    match &tokens[i] {
+        Token::Id(file) => {
+            ast.push(Node::Redirect {
+                op: Operator::RedirectOutput,
+                cmds: [prev_node].to_vec(),
+                file: file.to_string(),
+            });
+
+            i += 1;
+        }
+
+        _ => {
+            return Err("parse error near '>'".to_string());
         }
     }
 
@@ -488,6 +520,28 @@ fn expr(ast: &[Node]) -> Result<ExitStatus, String> {
                     }
                     _ => {
                         return Err("parse error near '<'".to_string());
+                    }
+                };
+            }
+
+            Node::Redirect {
+                op: Operator::RedirectOutput,
+                cmds,
+                file,
+            } => {
+                match &cmds[0] {
+                    Node::Command { cmd: _, args: _ } | Node::Subshell { cmd: _ } => {
+                        let proc = node_to_process(cmds[0].clone())?;
+                        exit_code = run_cmd_redirect_output(&proc, file)?;
+                    }
+                    Node::InlineGroup { cmds } => {
+                        for cmd in cmds {
+                            let proc = node_to_process(cmd.clone())?;
+                            exit_code = run_cmd_redirect_output(&proc, file)?;
+                        }
+                    }
+                    _ => {
+                        return Err("parse error near '>'".to_string());
                     }
                 };
             }
